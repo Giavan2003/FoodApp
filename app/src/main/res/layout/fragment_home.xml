@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layout_main"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- SearchView Layout -->
+            <LinearLayout
+                android:id="@+id/layout_searchView"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/rectangle_search"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/find"
+                    android:layout_width="20dp"
+                    android:layout_height="0dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_weight="1"
+                    android:fitsSystemWindows="false"
+                    app:srcCompat="@drawable/baseline_search_24" />
+            </LinearLayout>
+
+            <!-- ViewPager Layout -->
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/viewPager2"
+                android:layout_width="match_parent"
+                android:layout_height="220dp" />
+
+            <!-- CircleIndicator Layout -->
+            <me.relex.circleindicator.CircleIndicator3
+                android:id="@+id/circle_indicator3"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_margin="5dp"
+                app:ci_drawable="@drawable/circle_background" />
+
+            <!-- TabLayout Layout -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabHome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:contentDescription="tab layout"
+                android:outlineAmbientShadowColor="@color/cardview_shadow_end_color"
+                app:tabIndicatorColor="#FD8C32"
+                app:tabIndicatorFullWidth="true"
+                app:tabIndicatorHeight="3dp" />
+
+            <!-- ViewPager2 Layout -->
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/viewpaperHome"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="15dp"
+                android:background="@color/white" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

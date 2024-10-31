@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Quite_Border_Image" >
+        <item name="cornerSize">20%</item>
+    </style>
+    <style name="RoundedImageViewStyle">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item> <!-- 50% làm cho hình tròn -->
+    </style>
+</resources>
