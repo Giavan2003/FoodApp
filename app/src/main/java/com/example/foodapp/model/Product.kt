@@ -1,5 +1,6 @@
 package com.example.foodapp.model
 
+
 import java.io.Serializable
 
 
@@ -122,21 +123,7 @@ class Product : Serializable {
         this.state = state
     }
 
-    override fun toString(): String {
-        return "Products{" +
-                "productId='" + productId + '\'' +
-                ", productName='" + productName + '\'' +
-                ", productImage1='" + productImage1 + '\'' +
-                ", productImage2='" + productImage2 + '\'' +
-                ", productImage3='" + productImage3 + '\'' +
-                ", productImage4='" + productImage4 + '\'' +
-                ", productPrice=" + productPrice +
-                ", productType='" + productType + '\'' +
-                ", remainAmount=" + remainAmount +
-                ", description='" + description + '\'' +
-                ", ratingStar=" + ratingStar +
-                ", publisherId='" + publisherId + '\'' +
-                "}"
-    }
 }
+
+
 
