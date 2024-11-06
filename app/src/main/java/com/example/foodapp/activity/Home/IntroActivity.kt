@@ -7,6 +7,6 @@ import com.example.foodapp.R
 class IntroActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_intro2)
+        setContentView(R.layout.activity_intro)
     }
 }

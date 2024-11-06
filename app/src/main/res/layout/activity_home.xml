@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
-    <com.google.android.material.navigation.NavigationView
+    <com.ismaeldivita.chipnavigation.ChipNavigationBar
         android:id="@+id/navigation_left"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
@@ -14,7 +14,6 @@
         app:headerLayout="@layout/layout_navigation_header"
         app:cnb_orientationMode="vertical"
         app:menu="@menu/menu_navigation" />
-
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -43,7 +42,7 @@
         </LinearLayout>
 
 
-        <com.etebarian.meowbottomnavigation.MeowBottomNavigation
+        <meow.bottomnavigation.MeowBottomNavigation
             android:id="@+id/bottomNavigation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
