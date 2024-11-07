@@ -56,7 +56,7 @@ class MyFoodActivity : AppCompatActivity() {
         dialog.show()
 
         apiService = RetrofitClient.retrofit!!.create(APIService::class.java)
-        apiService.getProductsPublisherId(userId ?: "")?.enqueue(object : Callback<List<Product>> {
+        apiService.getProductsPublisherId(userId ?: "").enqueue(object : Callback<List<Product>> {
             override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
                 val lstProduct = response.body()
                 if (response.isSuccessful && lstProduct != null) {

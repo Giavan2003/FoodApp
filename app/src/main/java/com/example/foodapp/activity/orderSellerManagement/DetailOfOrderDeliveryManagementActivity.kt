@@ -1,6 +1,5 @@
 package com.example.foodapp.activity.orderSellerManagement
 
-package com.uteating.foodapp.activity.orderSellerManagement
 
 import android.content.Intent
 import android.graphics.Color
@@ -41,19 +40,21 @@ class DetailOfOrderDeliveryManagementActivity : AppCompatActivity() {
                     binding.txtStatusOrderDetail.setTextColor(Color.parseColor("#48DC7D"))
                 }
 
-                FirebaseOrderDetailHelper().readOrderDetail(addressId, recipientId, billId, object : FirebaseOrderDetailHelper.DataStatus {
-                    override fun DataIsLoaded(address: String, billInfos: List<BillInfo>) {
-                        binding.txtAddressDetail.text = address
-                        val adapter = ListOfItemInOrderAdapter(this@DetailOfOrderDeliveryManagementActivity, billInfos)
-                        binding.recOrderDetail.layoutManager = LinearLayoutManager(this@DetailOfOrderDeliveryManagementActivity)
-                        binding.recOrderDetail.setHasFixedSize(true)
-                        binding.recOrderDetail.adapter = adapter
-                    }
+                if (addressId != null && recipientId != null && billId != null) {
+                    FirebaseOrderDetailHelper().readOrderDetail(addressId, recipientId, billId, object : FirebaseOrderDetailHelper.DataStatus {
+                        override fun DataIsLoaded(address: String, billInfos: List<BillInfo>) {
+                            binding.txtAddressDetail.text = address
+                            val adapter = ListOfItemInOrderAdapter(this@DetailOfOrderDeliveryManagementActivity, billInfos)
+                            binding.recOrderDetail.layoutManager = LinearLayoutManager(this@DetailOfOrderDeliveryManagementActivity)
+                            binding.recOrderDetail.setHasFixedSize(true)
+                            binding.recOrderDetail.adapter = adapter
+                        }
 
-                    override fun DataIsInserted() {}
-                    override fun DataIsUpdated() {}
-                    override fun DataIsDeleted() {}
-                })
+                        override fun DataIsInserted() {}
+                        override fun DataIsUpdated() {}
+                        override fun DataIsDeleted() {}
+                    })
+                }
             } catch (ex: Exception) {
                 ex.printStackTrace()
             }

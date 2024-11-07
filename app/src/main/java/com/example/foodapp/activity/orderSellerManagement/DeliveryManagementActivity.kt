@@ -25,7 +25,7 @@ class DeliveryManagementActivity : AppCompatActivity() {
         // Get input
         userId = intent.getStringExtra("userId")
 
-        statusPagerAdapter = StatusManagementPagerAdapter(this, userId)
+        statusPagerAdapter = userId?.let { StatusManagementPagerAdapter(this, it) }!!
         binding.viewPagerStatus.adapter = statusPagerAdapter
 
         binding.btnBack.setOnClickListener {

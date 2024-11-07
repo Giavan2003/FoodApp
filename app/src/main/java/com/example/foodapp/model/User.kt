@@ -17,8 +17,7 @@ class User : Serializable {
     }
 
     fun setAdmin(admin: Boolean) {
-        var admin = admin
-        admin = admin
+        this.admin = admin
     }
 
     constructor()
