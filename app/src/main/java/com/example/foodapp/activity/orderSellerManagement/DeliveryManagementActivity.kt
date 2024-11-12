@@ -39,7 +39,6 @@ class DeliveryManagementActivity : AppCompatActivity() {
                     binding.viewPagerStatus.currentItem = it.position
                 }
             }
-
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
             override fun onTabReselected(tab: TabLayout.Tab?) {}
         })

@@ -3,6 +3,7 @@ package com.example.foodapp.fragment.DeliveryManagement_Seller
 
 
 import android.os.Bundle
+
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +13,7 @@ import com.example.foodapp.adapter.DeliveryManagement_Seller.StatusOrderRecycler
 import com.example.foodapp.databinding.FragmentCompletedStatusDeliveryBinding
 import com.example.foodapp.helper.FirebaseStatusOrderHelper
 import com.example.foodapp.model.Bill
-import java.util.*
+
 
 class CompletedStatusDeliveryFragment(private val userId: String) : Fragment() {
 
@@ -24,7 +25,6 @@ class CompletedStatusDeliveryFragment(private val userId: String) : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = FragmentCompletedStatusDeliveryBinding.inflate(inflater, container, false)
-
         // Pull data and set adapter for recycler view
         FirebaseStatusOrderHelper(userId).readCompletedBills(userId, object : FirebaseStatusOrderHelper.DataStatus {
             override fun dataIsLoaded(bills: List<Bill>, isExistingBill: Boolean) {
@@ -38,11 +38,8 @@ class CompletedStatusDeliveryFragment(private val userId: String) : Fragment() {
                 binding.progressBarCompletedDelivery.visibility = View.GONE
                 binding.txtNoneItem.visibility = if (isExistingBill) View.GONE else View.VISIBLE
             }
-
             override fun dataIsInserted() {}
-
             override fun dataIsUpdated() {}
-
             override fun dataIsDeleted() {}
         })
 

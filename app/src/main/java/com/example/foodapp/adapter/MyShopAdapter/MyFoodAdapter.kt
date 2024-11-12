@@ -19,11 +19,11 @@ import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast
 import com.example.foodapp.databinding.LayoutFoodItemBinding
 import com.example.foodapp.model.Product
 
-class MyShopAdapter(
+class MyFoodAdapter(
     private var ds: List<Product>,
     private val context: Context,
     private val userId: String
-) : RecyclerView.Adapter<MyShopAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<MyFoodAdapter.ViewHolder>() {
 
     private val viewBinderHelper = ViewBinderHelper().apply { setOpenOnlyOne(true) }
 
