@@ -24,80 +24,92 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class SignUpFragment : Fragment() {
-    private var binding: FragmentSignUpBinding? = null
-    private var dialog: LoadingDialog? = null
-    private var apiService: APIService? = null
+
+    private lateinit var binding: FragmentSignUpBinding
+    private lateinit var dialog: LoadingDialog
+    private lateinit var apiService: APIService
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        // Inflate the layout for this fragment
         binding = FragmentSignUpBinding.inflate(inflater, container, false)
-        val view = binding?.root
 
-        binding?.btnSignUp?.setOnClickListener {
+        binding.btnSignUp.setOnClickListener {
             if (check()) {
+                apiService = RetrofitClient.retrofit!!.create(APIService::class.java)
+                val phone = binding.edtPhone.text.toString()
+                val name = binding.edtName.text.toString()
+                val email = binding.edtEmail.text.toString()
+                val pass = binding.edtPass.text.toString()
 
-                val apiService: APIService = RetrofitClient.retrofit!!.create(APIService::class.java)
-                val phone = binding?.edtPhone?.text.toString()
-                val name = binding?.edtName?.text.toString()
-                val email = binding?.edtEmail?.text.toString()
-                val pass = binding?.edtPass?.text.toString()
                 dialog = LoadingDialog(requireContext())
-                dialog?.show()
+                dialog.show()
 
                 FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, pass)
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            task.result?.user?.uid?.let { uid ->
-                                SuccessfulToast(requireContext(), uid).showToast()
-                                val tmp = User(uid, email, "", name, "01/01/2000", phone)
-                                val cart = Cart(FirebaseDatabase.getInstance().reference.push().key ?: "", 0, 0, uid)
-                                val userDTO = UserDTO(uid, name, email, pass)
+                            val userId = task.result?.user?.uid
+                            if (userId != null) {
+                                val user = User(userId, email, "", name, "01/01/2000", phone)
+                                val cartId = FirebaseDatabase.getInstance().reference.push().key ?: ""
+                                val cart = Cart(cartId, 0, 0, userId)
 
-                                apiService?.signUp(userDTO)?.enqueue(object : Callback<String> {
+                                val userDTO = UserDTO(userId, name, email, pass)
+                                apiService.signUp(userDTO).enqueue(object : Callback<String> {
                                     override fun onResponse(call: Call<String>, response: Response<String>) {
                                         if (response.isSuccessful) {
-                                            Log.d("noti", "Thanh cong")
+                                            // Log success if needed
                                         } else {
-                                            Log.d("noti", "That bai")
+                                            // Log failure if needed
                                         }
                                     }
 
                                     override fun onFailure(call: Call<String>, t: Throwable) {
-                                        Log.d("noti", "Failure: ${t.message}")
+                                        // Handle failure
                                     }
                                 })
 
-                                FirebaseDatabase.getInstance().getReference("Users").child(tmp.userId!!)
-                                    .setValue(tmp).addOnCompleteListener { task ->
-                                        dialog?.dismiss()
-                                        if (task.isSuccessful) {
-                                            FirebaseDatabase.getInstance().getReference("Carts").child(cart.cartId!!)
+
+                                FirebaseDatabase.getInstance().getReference("Users")
+                                    .child(userId)
+                                    .setValue(user)
+                                    .addOnCompleteListener { userTask ->
+                                        if (userTask.isSuccessful) {
+
+                                            FirebaseDatabase.getInstance().getReference("Carts")
+                                                .child(cartId)
                                                 .setValue(cart)
+
                                             SuccessfulToast(requireContext(), "Create account successfully").showToast()
+                                            dialog.dismiss()
                                         } else {
+                                            dialog.dismiss()
                                             FailToast(requireContext(), "Create account unsuccessfully").showToast()
                                         }
                                     }
+                            } else {
+                                dialog.dismiss()
+                                FailToast(requireContext(), "Failed to get user ID").showToast()  // Thông báo nếu userId là null
                             }
                         } else {
-                            dialog?.dismiss()
+                            dialog.dismiss()
                             FailToast(requireContext(), "Create account unsuccessfully").showToast()
-                            Log.w("REGISTER", "createUserWithEmail:failure", task.exception)
                         }
+
                     }
             }
         }
 
-        return view
+        return binding.root
     }
 
     private fun check(): Boolean {
-        val phone = binding?.edtPhone?.text.toString()
-        val name = binding?.edtName?.text.toString()
-        val email = binding?.edtEmail?.text.toString()
-        val pass = binding?.edtPass?.text.toString()
+        val phone = binding.edtPhone.text.toString()
+        val name = binding.edtName.text.toString()
+        val email = binding.edtEmail.text.toString()
+        val pass = binding.edtPass.text.toString()
 
         return when {
             phone.isEmpty() || name.isEmpty() || email.isEmpty() || pass.isEmpty() -> {
@@ -108,7 +120,7 @@ class SignUpFragment : Fragment() {
                 createDialog("Email không đúng định dạng").show()
                 false
             }
-            !phone.matches(Regex("(03|05|07|08|09|01[2689])[0-9]{8}\\b")) -> {
+            !phone.matches("(03|05|07|08|09|01[2689])[0-9]{8}\\b".toRegex()) -> {
                 createDialog("Số điện thoại không hợp lệ").show()
                 false
             }
@@ -120,13 +132,8 @@ class SignUpFragment : Fragment() {
         return AlertDialog.Builder(requireContext())
             .setMessage(message)
             .setTitle("Notice")
-            .setNegativeButton("Ok") { dialogInterface, _ -> dialogInterface.dismiss() }
-            .setNegativeButton("Cancel") { dialogInterface, _ -> dialogInterface.dismiss() }
+            .setNegativeButton("Ok") { dialog, _ -> dialog.dismiss() }
+            .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
             .create()
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        binding = null
     }
 }

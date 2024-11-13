@@ -16,41 +16,29 @@ class ForgotActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityForgotBinding.inflate(layoutInflater)
-        setContentView(binding.root)  // Bỏ getRoot()
-
+        setContentView(binding.root)
 
         window.statusBarColor = Color.parseColor("#E8584D")
         window.navigationBarColor = Color.parseColor("#E8584D")
 
-
         binding.btnReset.setOnClickListener {
             val email = binding.edtEmail.text.toString()
             if (email.isEmpty()) {
-                FailToast(
-                    this@ForgotActivity,
-                    "Please enter the email you want to reset password"
-                ).showToast()
+                FailToast(this, "Please enter the email you want to reset password").showToast()
             } else {
-                FirebaseAuth.getInstance()
-                    .sendPasswordResetEmail(email)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            SuccessfulToast(
-                                this@ForgotActivity,
-                                "Reset password successfully! Please check your email"
-                            ).showToast()
-                            finish()
-                        } else {
-                            FailToast(
-                                this@ForgotActivity,
-                                "Make sure your entered email is correct!"
-                            ).showToast()
-                        }
+                FirebaseAuth.getInstance().sendPasswordResetEmail(email).addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        SuccessfulToast(this, "Reset password successfully! Please check your email").showToast()
+                        finish()
+                    } else {
+                        FailToast(this, "Make sure your entered email is correct!").showToast()
                     }
+                }
             }
         }
 
-
-        binding.signupBtn.setOnClickListener { finish() }
+        binding.signupBtn.setOnClickListener {
+            finish()
+        }
     }
 }

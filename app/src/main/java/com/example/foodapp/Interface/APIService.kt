@@ -1,7 +1,9 @@
 package com.example.foodapp.Interface
 
 
+import com.example.foodapp.model.CartProduct
 import com.example.foodapp.model.Product
+import com.example.foodapp.model.User
 import com.example.foodapp.model.UserDTO
 import retrofit2.Call
 import retrofit2.http.Body
@@ -28,11 +30,11 @@ interface APIService {
     @GET("/api/products/{productId}")
     fun getProductInfor(@Path("productId") productId: String): Call<Product>
 
-//    @GET("/api/user/{userId}")
-//    fun getUserByUserId(@Path("userId") userId: String): Call<User>
+    @GET("/api/user/{userId}")
+    fun getUserByUserId(@Path("userId") userId: String): Call<User>
 
-//    @PUT("/api/user/update")
-//    fun updateUser(@Body user: User): Call<User>
+    @PUT("/api/user/update")
+    fun updateUser(@Body user: User): Call<User>
 
     @POST("/api/user/product/add")
     fun addProduct(@Body product: Product): Call<Product>
@@ -50,8 +52,8 @@ interface APIService {
         @Query("productId") productId: String
     ): Call<Product>
 
-//    @GET("/api/cart/productCart")
-//    fun getProductCart(@Query("idProduct") idProduct: String): Call<CartProduct>
+    @GET("/api/cart/productCart")
+    fun getProductCart(@Query("idProduct") idProduct: String): Call<CartProduct>
 
     @PUT("/api/admin/product/check")
     fun checkProduct(
