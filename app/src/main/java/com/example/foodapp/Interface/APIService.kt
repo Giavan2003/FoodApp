@@ -2,6 +2,7 @@ package com.example.foodapp.Interface
 
 
 import com.example.foodapp.model.Product
+import com.example.foodapp.model.UserDTO
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -12,8 +13,8 @@ import retrofit2.http.Query
 
 
 interface APIService {
-//    @POST("api/auth/signup")
-//    fun signUp(@Body user: UserDTO): Call<String>
+    @POST("api/auth/signup")
+    fun signUp(@Body user: UserDTO): Call<String>
 
     @GET("/api/products")
     fun getAllProducts(): Call<List<Product>>
