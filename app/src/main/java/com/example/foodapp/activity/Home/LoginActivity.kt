@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
+import com.example.foodapp.activity.Cart_PlaceOrder.HomeActivity
 import com.example.foodapp.adapter.Home.LoginSignUpAdapter
 import com.example.foodapp.databinding.ActivityLoginBinding
 import com.google.android.material.tabs.TabLayout

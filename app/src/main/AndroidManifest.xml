@@ -62,10 +62,10 @@
             android:name=".activity.Home.ProfileActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
-        <activity
-            android:name=".activity.Cart_PlaceOrder.UpdateAddAddressActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustPan" />
+<!--        <activity-->
+<!--            android:name=".activity.Cart_PlaceOrder.UpdateAddAddressActivity"-->
+<!--            android:exported="false"-->
+<!--            android:windowSoftInputMode="adjustPan" />-->
         <activity
             android:name=".activity.Cart_PlaceOrder.ChangeAddressActivity"
             android:exported="false"
@@ -95,7 +95,7 @@
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".activity.Home.IntroActivity"
+            android:name=".activity.Cart_PlaceOrder.UpdateAddAddressActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
@@ -104,10 +104,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activity.Home.HomeActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustPan" />
+<!--        <activity-->
+<!--            android:name=".activity.Home."-->
+<!--            android:exported="false"-->
+<!--            android:windowSoftInputMode="adjustPan" />-->
         <activity
             android:name=".activity.orderSellerManagement.DetailOfOrderDeliveryManagementActivity"
             android:exported="false"
