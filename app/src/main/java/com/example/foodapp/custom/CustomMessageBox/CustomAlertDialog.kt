@@ -20,11 +20,15 @@ class CustomAlertDialog(mContext: Context, content: String) {
     }
 
     init {
+
         val builder = AlertDialog.Builder(mContext, R.style.AlertDialogTheme)
+
+
         binding = LayoutAlertDialogBinding.inflate(LayoutInflater.from(mContext))
         builder.setView(binding.root)
 
         binding.txtContentMessage.text = content
+
         alertDialog = builder.create()
         alertDialog.window?.setBackgroundDrawable(ColorDrawable(0))
     }

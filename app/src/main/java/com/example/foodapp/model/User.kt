@@ -8,6 +8,7 @@ class User : Serializable {
     var email: String? = null
     var password: String? = null
     var avatarURL: String? = null
+    var birthDate: String? = null
     var userName: String? = null
     var phoneNumber: String? = null
     var admin = false
@@ -22,6 +23,7 @@ class User : Serializable {
         email: String?,
         password: String?,
         avatarURL: String?,
+        birthDate: String?,
         userName: String?,
         phoneNumber: String?,
         isActive: Boolean
@@ -31,6 +33,7 @@ class User : Serializable {
         this.email = email
         this.password = password
         this.avatarURL = avatarURL
+        this.birthDate = birthDate
         this.userName = userName
         this.phoneNumber = phoneNumber
         this.isActive = isActive

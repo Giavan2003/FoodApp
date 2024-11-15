@@ -52,7 +52,7 @@ class SignUpFragment : Fragment() {
                         if (task.isSuccessful) {
                             val userId = task.result?.user?.uid
                             if (userId != null) {
-                                val tmp = User(userId,fulname,email,pass,"",username,phone,true)
+                                val tmp = User(userId,fulname,email,pass,"","01/01/2000",username,phone,true)
                                 val cartId =
                                     FirebaseDatabase.getInstance().reference.push().key ?: ""
                                 val cart = Cart(cartId, 0, 0, userId)

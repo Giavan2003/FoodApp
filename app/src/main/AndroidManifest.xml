@@ -46,10 +46,10 @@
             android:name=".activity.feedback.FeedBackActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
-<!--        <activity-->
-<!--            android:name=".activity.order.OrderActivity"-->
-<!--            android:exported="false"-->
-<!--            android:windowSoftInputMode="adjustPan" />-->
+        <activity
+            android:name=".activity.order.OrderActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activity.MyShop.MyShopActivity"
             android:exported="false"
@@ -62,10 +62,10 @@
             android:name=".activity.Home.ProfileActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
-<!--        <activity-->
-<!--            android:name=".activity.Cart_PlaceOrder.UpdateAddAddressActivity"-->
-<!--            android:exported="false"-->
-<!--            android:windowSoftInputMode="adjustPan" />-->
+        <activity
+            android:name=".activity.Cart_PlaceOrder.UpdateAddAddressActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activity.Cart_PlaceOrder.ChangeAddressActivity"
             android:exported="false"
@@ -95,7 +95,7 @@
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".activity.Home.LoginActivity"
+            android:name=".activity.Home.IntroActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
@@ -105,7 +105,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.Home.IntroActivity"
+            android:name=".activity.Home.LoginActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
         <activity

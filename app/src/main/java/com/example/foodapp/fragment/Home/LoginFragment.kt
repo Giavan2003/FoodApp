@@ -48,11 +48,21 @@ class LoginFragment : Fragment() {
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             val idCurrentUser = FirebaseAuth.getInstance().currentUser?.uid
-                            idCurrentUser?.let {
+                            idCurrentUser?.let { userId ->
+
+                                val userRef = FirebaseDatabase.getInstance().getReference("Users").child(userId)
+                                userRef.child("password").setValue(password)
+                                    .addOnCompleteListener { dbTask ->
+                                        if (!dbTask.isSuccessful) {
+                                            Log.e("UpdatePassword", "Failed to update password in Users table")
+                                        }
+                                    }
+
                                 FirebaseDatabase.getInstance().getReference("Users")
-                                    .child(it)
+                                    .child(userId)
                                     .addListenerForSingleValueEvent(object : ValueEventListener {
                                         override fun onDataChange(snapshot: DataSnapshot) {
+
                                             SuccessfulToast(requireContext(), "Login successfully!").showToast()
                                             Intent(requireContext(), HomeActivity::class.java).also {
                                                 startActivity(it)
@@ -66,13 +76,14 @@ class LoginFragment : Fragment() {
                                     })
                             }
                         } else {
+
                             FailToast(requireContext(), "Wrong email or password!").showToast()
                         }
                     }
             }
         }
 
-        view?.findViewById<TextView>(R.id.forgotpassText)?.setOnClickListener {
+        binding.forgotpassText.setOnClickListener {
             val intent = Intent(requireContext(), ForgotActivity::class.java)
             startActivity(intent)
         }

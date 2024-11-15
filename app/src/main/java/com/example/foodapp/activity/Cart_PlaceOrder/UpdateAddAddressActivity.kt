@@ -25,6 +25,7 @@ class UpdateAddAddressActivity : AppCompatActivity() {
         binding = ActivityUpdateAddAddressBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Nhận userId từ Intent
         userId = intent.getStringExtra("userId") ?: ""
         mode = intent.getStringExtra("mode") ?: ""
 
@@ -79,8 +80,8 @@ class UpdateAddAddressActivity : AppCompatActivity() {
     private fun loadAddressDetails(addressId: String) {
         FirebaseDatabase.getInstance().getReference()
             .child("Address")
-            .child(userId)
-            .child(addressId)
+            .child(userId) // Chỉ định userId để tìm địa chỉ của người dùng
+            .child(addressId) // Chỉ định addressId để tải địa chỉ cụ thể
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val address = snapshot.getValue(Address::class.java)
@@ -123,12 +124,12 @@ class UpdateAddAddressActivity : AppCompatActivity() {
     }
 
     private fun addNewAddress(address: Address) {
-        val addressId = address.addressId
+        val addressId = address.addressId ?: FirebaseDatabase.getInstance().getReference().push().key
         if (addressId != null) {
             FirebaseDatabase.getInstance().getReference()
                 .child("Address")
-                .child(userId)
-                .child(addressId)
+                .child(userId) // Lưu dưới `userId`
+                .child(addressId) // Lưu địa chỉ theo `addressId`
                 .setValue(address)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
@@ -136,11 +137,9 @@ class UpdateAddAddressActivity : AppCompatActivity() {
                     }
                 }
         } else {
-
             Log.e("AddNewAddress", "Address ID is null!")
         }
     }
-
 
     private fun handlePostAddSuccess(address: Address) {
         if (address.state == "default") {
@@ -155,7 +154,7 @@ class UpdateAddAddressActivity : AppCompatActivity() {
     private fun updateOtherAddressesToNonDefault(address: Address) {
         FirebaseDatabase.getInstance().getReference()
             .child("Address")
-            .child(userId)
+            .child(userId) // Xác định người dùng
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val updates = mutableMapOf<String, Any>()
@@ -178,8 +177,8 @@ class UpdateAddAddressActivity : AppCompatActivity() {
     private fun updateAddress(address: Address, addressId: String) {
         FirebaseDatabase.getInstance().getReference()
             .child("Address")
-            .child(userId)
-            .child(addressId)
+            .child(userId) // Lưu dưới `userId`
+            .child(addressId) // Cập nhật địa chỉ theo `addressId`
             .setValue(address)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -208,3 +207,4 @@ class UpdateAddAddressActivity : AppCompatActivity() {
         }
     }
 }
+
