@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.example.foodapp.R
-import com.example.foodapp.activity.Cart_PlaceOrder.HomeActivity
+import com.example.foodapp.activity.Home.HomeActivity
 import com.example.foodapp.activity.Home.ForgotActivity
 
 import com.example.foodapp.custom.CustomMessageBox.FailToast

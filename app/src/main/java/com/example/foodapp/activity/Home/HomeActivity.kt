@@ -1,4 +1,4 @@
-package com.example.foodapp.activity.Cart_PlaceOrder
+package com.example.foodapp.activity.Home
 
 import android.Manifest
 import android.app.NotificationChannel
@@ -51,44 +51,9 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-
-    private lateinit var binding: ActivityHomeBinding
-    private lateinit var userId: String
-
+class HomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityHomeBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-
-        //binding.navigationLeft.setNavigationItemSelectedListener(this@HomeActivity)
-
-
-    }
-
-    override fun onNavigationItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.logoutMenu -> {
-                showLogoutDialog()
-                true
-            }
-            else -> false
-        }
-    }
-
-    private fun showLogoutDialog() {
-        CustomAlertDialog(this, "Do you want to logout?")
-        CustomAlertDialog.binding.btnYes.setOnClickListener {
-            SuccessfulToast(this, "Logout successfully!").showToast()
-            CustomAlertDialog.alertDialog.dismiss()
-            FirebaseAuth.getInstance().signOut()
-            startActivity(Intent(this, LoginActivity::class.java).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK))
-            finish()
-        }
-        CustomAlertDialog.binding.btnNo.setOnClickListener {
-            CustomAlertDialog.alertDialog.dismiss()
-        }
-        CustomAlertDialog.showAlertDialog()
+        setContentView(R.layout.activity_home)
     }
 }

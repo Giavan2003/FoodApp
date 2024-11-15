@@ -33,18 +33,16 @@ class SignUpFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+
         binding = FragmentSignUpBinding.inflate(inflater, container, false)
 
         binding.btnSignUp.setOnClickListener {
             if (check()) {
-                apiService = RetrofitClient.retrofit!!.create(APIService::class.java)
                 val phone = binding.edtPhone.text.toString()
-                val fullName = binding.edtFullName.text.toString()
-                val userName = binding.edtName.text.toString()
+                val fulname = binding.edtFullName.text.toString()
+                val username = binding.edtName.text.toString()
                 val email = binding.edtEmail.text.toString()
                 val pass = binding.edtPass.text.toString()
-
 
                 dialog = LoadingDialog(requireContext())
                 dialog.show()
@@ -54,34 +52,22 @@ class SignUpFragment : Fragment() {
                         if (task.isSuccessful) {
                             val userId = task.result?.user?.uid
                             if (userId != null) {
-
-                                // Tạo đối tượng User
-                                val user =
-                                    User(userId, fullName, email, pass, "", userName, phone, true)
-
-                                // Tạo cartId cho người dùng
+                                val tmp = User(userId,fulname,email,pass,"",username,phone,true)
                                 val cartId =
                                     FirebaseDatabase.getInstance().reference.push().key ?: ""
                                 val cart = Cart(cartId, 0, 0, userId)
 
-                                // Lưu người dùng vào Realtime Database
-                                FirebaseDatabase.getInstance().getReference("Users")
-                                    .child(userId)
-                                    .setValue(user)
-                                    .addOnCompleteListener { userTask ->
+                                FirebaseDatabase.getInstance().reference.child("Users")
+                                    .child(tmp.userId!!)
+                                    .setValue(tmp).addOnCompleteListener { userTask ->
                                         if (userTask.isSuccessful) {
-
-                                            // Lưu thông tin giỏ hàng vào Firebase Realtime Database
-                                            FirebaseDatabase.getInstance().getReference("Carts")
-                                                .child(cartId)
-                                                .setValue(cart)
-
-                                            // Thông báo tạo tài khoản thành công
+                                            dialog.dismiss()
+                                            FirebaseDatabase.getInstance().reference.child("Carts")
+                                                .child(cart.cartId!!).setValue(cart)
                                             SuccessfulToast(
                                                 requireContext(),
                                                 "Create account successfully"
                                             ).showToast()
-                                            dialog.dismiss()
                                         } else {
                                             dialog.dismiss()
                                             FailToast(
@@ -95,16 +81,15 @@ class SignUpFragment : Fragment() {
                                 FailToast(requireContext(), "Failed to get user ID").showToast()
                             }
                         } else {
+                            createDialog("Email đã tồn tại").show()
                             dialog.dismiss()
-                            FailToast(requireContext(), "Create account unsuccessfully").showToast()
                         }
                     }
             }
-
         }
 
 
-        return binding.root
+            return binding.root
     }
 
     private fun check(): Boolean {

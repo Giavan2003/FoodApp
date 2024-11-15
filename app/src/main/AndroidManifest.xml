@@ -90,10 +90,10 @@
             android:name=".activity.Home.FindActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
-<!--        <activity-->
-<!--            android:name=".activity.Home.LoginActivity"-->
-<!--            android:exported="true"-->
-<!--            android:windowSoftInputMode="adjustPan" />-->
+        <activity
+            android:name=".activity.Home.HomeActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activity.Home.LoginActivity"
             android:exported="true"
@@ -104,10 +104,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-<!--        <activity-->
-<!--            android:name=".activity.Home."-->
-<!--            android:exported="false"-->
-<!--            android:windowSoftInputMode="adjustPan" />-->
+        <activity
+            android:name=".activity.Home.IntroActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activity.orderSellerManagement.DetailOfOrderDeliveryManagementActivity"
             android:exported="false"
