@@ -22,7 +22,7 @@ class MyFoodActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMyFoodBinding
     private val ds: MutableList<Product> = ArrayList()
     private lateinit var adapter: MyFoodAdapter
-    private var userId: String? = null
+    private lateinit var userId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +34,7 @@ class MyFoodActivity : AppCompatActivity() {
 
         //userId = intent.getStringExtra("userId")
         userId = "sWuMLC04RPbSx4mzR0faHjhpwVP2"
-        adapter = MyFoodAdapter(ds, this, userId ?: "")
+        adapter = MyFoodAdapter(ds, this, userId)
         binding.recycleView.setHasFixedSize(true)
         binding.recycleView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         binding.recycleView.adapter = adapter

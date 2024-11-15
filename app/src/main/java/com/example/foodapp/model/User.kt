@@ -11,14 +11,8 @@ class User : Serializable {
     var userName: String? = null
     var birthDate: String? = null
     var phoneNumber: String? = null
-    private var admin = false
-    fun isAdmin(): Boolean {
-        return admin
-    }
-
-    fun setAdmin(admin: Boolean) {
-        this.admin = admin
-    }
+    var admin = false
+    var isActive = true
 
     constructor()
     constructor(
@@ -27,7 +21,8 @@ class User : Serializable {
         avatarURL: String?,
         userName: String?,
         birthDate: String?,
-        phoneNumber: String?
+        phoneNumber: String?,
+        isActive: Boolean
     ) {
         this.userId = userId
         this.email = email
@@ -35,6 +30,7 @@ class User : Serializable {
         this.userName = userName
         this.birthDate = birthDate
         this.phoneNumber = phoneNumber
+        this.isActive = isActive
     }
 
     constructor(
@@ -61,8 +57,7 @@ class User : Serializable {
         username: String?,
         email: String?,
         avatarURL: String?,
-        phone: String?,
-        isAdmin: Boolean
+        phone: String?
     ) {
         this.userId = userId
         this.fullName = fullName
@@ -70,6 +65,5 @@ class User : Serializable {
         this.avatarURL = avatarURL
         userName = username
         phoneNumber = phone
-        admin = isAdmin
     }
 }

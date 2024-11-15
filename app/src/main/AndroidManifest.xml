@@ -23,7 +23,10 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".activity.manager.ManagerActivity"
+            android:name=".activity.manager.ManagerProductActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.MyShop.MyShopActivity"
             android:exported="false" />
         <activity
             android:name=".activity.Home.ResultSearchActivity"
@@ -51,11 +54,10 @@
         <activity
             android:name=".activity.order.OrderActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustPan" />
-<!--        <activity-->
-<!--            android:name=".activity.Home.IntroActivity"-->
-<!--            android:exported="false"-->
-<!--            android:windowSoftInputMode="adjustPan" />-->
+            android:windowSoftInputMode="adjustPan" /> <!-- <activity -->
+        <!-- android:name=".activity.Home.IntroActivity" -->
+        <!-- android:exported="false" -->
+        <!-- android:windowSoftInputMode="adjustPan" /> -->
         <activity
             android:name=".activity.order.OrderDetailActivity"
             android:exported="false"
@@ -97,11 +99,12 @@
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".activity.MyShop.MyShopActivity"
+            android:name=".activity.manager.ManagerUserActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
