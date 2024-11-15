@@ -90,12 +90,12 @@
             android:name=".activity.Home.FindActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
+<!--        <activity-->
+<!--            android:name=".activity.Home.LoginActivity"-->
+<!--            android:exported="true"-->
+<!--            android:windowSoftInputMode="adjustPan" />-->
         <activity
             android:name=".activity.Home.LoginActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustPan" />
-        <activity
-            android:name=".activity.order.OrderActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>

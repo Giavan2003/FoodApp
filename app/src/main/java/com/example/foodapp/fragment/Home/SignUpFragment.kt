@@ -40,9 +40,11 @@ class SignUpFragment : Fragment() {
             if (check()) {
                 apiService = RetrofitClient.retrofit!!.create(APIService::class.java)
                 val phone = binding.edtPhone.text.toString()
-                val name = binding.edtName.text.toString()
+                val fullName = binding.edtFullName.text.toString()
+                val userName = binding.edtName.text.toString()
                 val email = binding.edtEmail.text.toString()
                 val pass = binding.edtPass.text.toString()
+
 
                 dialog = LoadingDialog(requireContext())
                 dialog.show()
@@ -52,67 +54,69 @@ class SignUpFragment : Fragment() {
                         if (task.isSuccessful) {
                             val userId = task.result?.user?.uid
                             if (userId != null) {
-                                val user = User(userId, email, "", name, "01/01/2000", phone)
-                                val cartId = FirebaseDatabase.getInstance().reference.push().key ?: ""
+
+                                // Tạo đối tượng User
+                                val user =
+                                    User(userId, fullName, email, pass, "", userName, phone, true)
+
+                                // Tạo cartId cho người dùng
+                                val cartId =
+                                    FirebaseDatabase.getInstance().reference.push().key ?: ""
                                 val cart = Cart(cartId, 0, 0, userId)
 
-                                val userDTO = UserDTO(userId, name, email, pass)
-                                apiService.signUp(userDTO).enqueue(object : Callback<String> {
-                                    override fun onResponse(call: Call<String>, response: Response<String>) {
-                                        if (response.isSuccessful) {
-                                            // Log success if needed
-                                        } else {
-                                            // Log failure if needed
-                                        }
-                                    }
-
-                                    override fun onFailure(call: Call<String>, t: Throwable) {
-                                        // Handle failure
-                                    }
-                                })
-
-
+                                // Lưu người dùng vào Realtime Database
                                 FirebaseDatabase.getInstance().getReference("Users")
                                     .child(userId)
                                     .setValue(user)
                                     .addOnCompleteListener { userTask ->
                                         if (userTask.isSuccessful) {
 
+                                            // Lưu thông tin giỏ hàng vào Firebase Realtime Database
                                             FirebaseDatabase.getInstance().getReference("Carts")
                                                 .child(cartId)
                                                 .setValue(cart)
 
-                                            SuccessfulToast(requireContext(), "Create account successfully").showToast()
+                                            // Thông báo tạo tài khoản thành công
+                                            SuccessfulToast(
+                                                requireContext(),
+                                                "Create account successfully"
+                                            ).showToast()
                                             dialog.dismiss()
                                         } else {
                                             dialog.dismiss()
-                                            FailToast(requireContext(), "Create account unsuccessfully").showToast()
+                                            FailToast(
+                                                requireContext(),
+                                                "Create account unsuccessfully"
+                                            ).showToast()
                                         }
                                     }
                             } else {
                                 dialog.dismiss()
-                                FailToast(requireContext(), "Failed to get user ID").showToast()  // Thông báo nếu userId là null
+                                FailToast(requireContext(), "Failed to get user ID").showToast()
                             }
                         } else {
                             dialog.dismiss()
                             FailToast(requireContext(), "Create account unsuccessfully").showToast()
                         }
-
                     }
             }
+
         }
+
 
         return binding.root
     }
 
     private fun check(): Boolean {
         val phone = binding.edtPhone.text.toString()
-        val name = binding.edtName.text.toString()
+        val fullName = binding.edtFullName.text.toString()
+        val userName = binding.edtName.text.toString()
         val email = binding.edtEmail.text.toString()
         val pass = binding.edtPass.text.toString()
 
+
         return when {
-            phone.isEmpty() || name.isEmpty() || email.isEmpty() || pass.isEmpty() -> {
+            phone.isEmpty() || fullName.isEmpty() || email.isEmpty() || pass.isEmpty() || userName.isEmpty() -> {
                 createDialog("Điền đầy đủ thông tin").show()
                 false
             }
@@ -137,3 +141,4 @@ class SignUpFragment : Fragment() {
             .create()
     }
 }
+
