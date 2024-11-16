@@ -35,15 +35,13 @@ class SignUpFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = FragmentSignUpBinding.inflate(inflater, container, false)
-
         binding.btnSignUp.setOnClickListener {
             if (check()) {
-                apiService = RetrofitClient.retrofit!!.create(APIService::class.java)
                 val phone = binding.edtPhone.text.toString()
-                val name = binding.edtName.text.toString()
+                val username = binding.edtName.text.toString()
                 val email = binding.edtEmail.text.toString()
                 val pass = binding.edtPass.text.toString()
-
+                val fullname = "TUNGNT"
                 dialog = LoadingDialog(requireContext())
                 dialog.show()
 
@@ -52,36 +50,17 @@ class SignUpFragment : Fragment() {
                         if (task.isSuccessful) {
                             val userId = task.result?.user?.uid
                             if (userId != null) {
-                                val user = User(userId, email, "", name, "01/01/2000", phone)
+                                val user = User(userId, fullname, email,username,pass, phone)
                                 val cartId = FirebaseDatabase.getInstance().reference.push().key ?: ""
                                 val cart = Cart(cartId, 0, 0, userId)
-
-                                val userDTO = UserDTO(userId, name, email, pass)
-                                apiService.signUp(userDTO).enqueue(object : Callback<String> {
-                                    override fun onResponse(call: Call<String>, response: Response<String>) {
-                                        if (response.isSuccessful) {
-                                            // Log success if needed
-                                        } else {
-                                            // Log failure if needed
-                                        }
-                                    }
-
-                                    override fun onFailure(call: Call<String>, t: Throwable) {
-                                        // Handle failure
-                                    }
-                                })
-
-
                                 FirebaseDatabase.getInstance().getReference("Users")
                                     .child(userId)
                                     .setValue(user)
                                     .addOnCompleteListener { userTask ->
                                         if (userTask.isSuccessful) {
-
                                             FirebaseDatabase.getInstance().getReference("Carts")
                                                 .child(cartId)
                                                 .setValue(cart)
-
                                             SuccessfulToast(requireContext(), "Create account successfully").showToast()
                                             dialog.dismiss()
                                         } else {

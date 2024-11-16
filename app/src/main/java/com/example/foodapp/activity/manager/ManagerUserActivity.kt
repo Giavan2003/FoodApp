@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.foodapp.adapter.manager.ManagerProductAdapter
 import com.example.foodapp.adapter.manager.ManagerUserAdapter
-import com.example.foodapp.databinding.ActivityManagerBinding
+
 import com.example.foodapp.databinding.ActivityManagerUserBinding
 import com.example.foodapp.model.Product
 import com.example.foodapp.model.User
@@ -40,8 +40,7 @@ class ManagerUserActivity : AppCompatActivity() {
     }
     private fun initData() {
         val intent = intent
-//        userId = intent.getStringExtra("userId").toString()
-        userId = "sWuMLC04RPbSx4mzR0faHjhpwVP2"
+        userId = intent.getStringExtra("userId").toString()
         FirebaseDatabase.getInstance().getReference("Users")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {

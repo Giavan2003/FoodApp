@@ -32,8 +32,8 @@ class MyFoodActivity : AppCompatActivity() {
         window.statusBarColor = Color.parseColor("#E8584D")
         window.navigationBarColor = Color.parseColor("#E8584D")
 
-        //userId = intent.getStringExtra("userId")
-        userId = "sWuMLC04RPbSx4mzR0faHjhpwVP2"
+        userId = intent.getStringExtra("userId").toString()
+
         adapter = MyFoodAdapter(ds, this, userId)
         binding.recycleView.setHasFixedSize(true)
         binding.recycleView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)

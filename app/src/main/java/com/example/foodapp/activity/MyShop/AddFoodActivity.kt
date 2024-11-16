@@ -24,6 +24,7 @@ import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast
 import com.example.foodapp.databinding.ActivityAddFoodBinding
 import com.example.foodapp.dialog.UploadDialog
 import com.example.foodapp.model.Product
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import com.karumi.dexter.Dexter
@@ -66,8 +67,7 @@ class AddFoodActivity : AppCompatActivity() {
         window.navigationBarColor = Color.parseColor("#E8584D")
         //Nhận intent từ edit--------------
         val intentUpdate = intent
-        //userId = FirebaseAuth.getInstance().currentUser!!.uid
-        userId = "sWuMLC04RPbSx4mzR0faHjhpwVP2"
+        userId = FirebaseAuth.getInstance().currentUser!!.uid
         if (intentUpdate != null && intentUpdate.hasExtra("Product updating")) {
             productUpdate = intentUpdate.getSerializableExtra("Product updating") as Product?
             checkUpdate = true

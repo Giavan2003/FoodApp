@@ -43,8 +43,7 @@ class ManagerProductActivity : AppCompatActivity() {
     }
     private fun initData() {
         val intent = intent
-//        userId = intent.getStringExtra("userId").toString()
-        userId = "sWuMLC04RPbSx4mzR0faHjhpwVP2"
+        userId = intent.getStringExtra("userId").toString()
         FirebaseDatabase.getInstance().getReference("Products")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
