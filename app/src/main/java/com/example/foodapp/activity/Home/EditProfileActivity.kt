@@ -26,6 +26,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
+import java.util.Calendar
 
 class EditProfileActivity : AppCompatActivity() {
 
@@ -236,17 +237,33 @@ class EditProfileActivity : AppCompatActivity() {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val user = snapshot.getValue(User::class.java)
                     user?.let {
-                        val dateSplit = it.birthDate!!.split("/")
-                        val day = dateSplit[0].toInt()
-                        val month = dateSplit[1].toInt()
-                        val year = dateSplit[2].toInt()
+                        val birthDate = it.birthDate
+                        if (birthDate != null) {
+                            val dateSplit = birthDate.split("/")
+                            val day = dateSplit[0].toInt()
+                            val month = dateSplit[1].toInt()
+                            val year = dateSplit[2].toInt()
 
-                        datePickerDialog = DatePickerDialog(this@EditProfileActivity, style, dateSetListener, year, month - 1, day)
+                            datePickerDialog = DatePickerDialog(this@EditProfileActivity, style, dateSetListener, year, month - 1, day)
+                        } else {
+                            // Handle case where birthDate is null, e.g., set default date or show a message
+                            // For example, you can use current date as the default
+                            val calendar = Calendar.getInstance()
+                            datePickerDialog = DatePickerDialog(
+                                this@EditProfileActivity,
+                                style,
+                                dateSetListener,
+                                calendar.get(Calendar.YEAR),
+                                calendar.get(Calendar.MONTH),
+                                calendar.get(Calendar.DAY_OF_MONTH)
+                            )
+                        }
                     }
                 }
 
                 override fun onCancelled(error: DatabaseError) {}
             })
+
     }
 
     private fun initToolbar() {

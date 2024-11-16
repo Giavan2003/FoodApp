@@ -64,7 +64,7 @@ class LoginActivity : AppCompatActivity() {
             val userId = currentUser?.uid
             if (userId != null) {
 
-                val intent = Intent(this, ChangeAddressActivity::class.java)
+                val intent = Intent(this, ProfileActivity::class.java)
                 intent.putExtra("userId", userId)
                 startActivity(intent)
                 finish()
