@@ -34,7 +34,7 @@ class ChangeAddressActivity : AppCompatActivity() {
     private lateinit var userId: String
     private lateinit var binding: ActivityChangeAddressBinding
     private lateinit var addressAdapter: AddressAdapter
-    private var addressList: MutableList<Address> = mutableListOf()
+    private lateinit var addressList: MutableList<Address>
     private lateinit var updateAddAddressLauncher: ActivityResultLauncher<Intent>
 
     companion object {
@@ -46,16 +46,15 @@ class ChangeAddressActivity : AppCompatActivity() {
         binding = ActivityChangeAddressBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        userId = intent.getStringExtra("userId") ?: ""
+        userId = intent.getStringExtra("userId") ?: throw IllegalArgumentException("userId is required")
+
 
         initToolbar()
         initUpdateAddAddressActivity()
 
-        binding.recyclerViewAddress.apply {
-            setHasFixedSize(true)
-            layoutManager = LinearLayoutManager(this@ChangeAddressActivity)
-        }
-
+        binding.recyclerViewAddress.setHasFixedSize(true)
+        binding.recyclerViewAddress.layoutManager = LinearLayoutManager(this)
+        addressList = mutableListOf()
         addressAdapter = AddressAdapter(this, addressList, userId).apply {
             setAddressAdapterListener(object : IAddressAdapterListener {
                 override fun onCheckedChanged(selectedAddress: Address) {
@@ -77,13 +76,15 @@ class ChangeAddressActivity : AppCompatActivity() {
             FirebaseDatabase.getInstance().reference.child("Address").child(userId)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
-                        val intent = Intent(this@ChangeAddressActivity, UpdateAddAddressActivity::class.java)
-                        intent.putExtra("userId", userId)
-                        intent.putExtra("mode", if (snapshot.childrenCount == 0L) "add - default" else "add - non-default")
+                        val intent = Intent(this@ChangeAddressActivity, UpdateAddAddressActivity::class.java).apply {
+                            putExtra("userId", userId)
+                            putExtra("mode", if (snapshot.childrenCount == 0L) "add - default" else "add - non-default")
+                        }
                         updateAddAddressLauncher.launch(intent)
                     }
 
-                    override fun onCancelled(error: DatabaseError) {}
+                    override fun onCancelled(error: DatabaseError) {
+                    }
                 })
         }
     }
@@ -108,19 +109,31 @@ class ChangeAddressActivity : AppCompatActivity() {
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     addressList.clear()
-                    val selectedAddress = snapshot.children
-                        .mapNotNull { it.getValue(Address::class.java) }
-                        .partition { it.addressId == GlobalConfig.choseAddressId }
 
-                    addressList.addAll(selectedAddress.first)
-                    addressList.addAll(selectedAddress.second)
+                    // Duyệt qua tất cả các địa chỉ trong snapshot
+                    snapshot.children.forEach { ds ->
+                        val address = ds.getValue(Address::class.java)
+                        if (address != null) {
+                            // Nếu addressId bằng choseAddressId thì thêm vào đầu list
+                            if (address.addressId == GlobalConfig.choseAddressId) {
+                                addressList.add(0, address) // Thêm vào đầu danh sách
+                            } else {
+                                // Các địa chỉ khác thêm vào cuối danh sách
+                                addressList.add(address)
+                            }
+                        }
+                    }
 
+                    // Cập nhật adapter sau khi thay đổi danh sách
                     addressAdapter.notifyDataSetChanged()
                 }
 
-                override fun onCancelled(error: DatabaseError) {}
+                override fun onCancelled(error: DatabaseError) {
+                    // Xử lý lỗi nếu có
+                }
             })
     }
+
 
     private fun initToolbar() {
         window.statusBarColor = Color.parseColor("#E8584D")
@@ -130,7 +143,6 @@ class ChangeAddressActivity : AppCompatActivity() {
             title = "Change address"
             setDisplayHomeAsUpEnabled(true)
         }
-
         binding.toolbar.setNavigationOnClickListener {
             setResult(RESULT_OK, Intent())
             finish()

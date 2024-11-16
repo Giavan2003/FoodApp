@@ -34,7 +34,6 @@ class LoginFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         binding = FragmentLoginBinding.inflate(inflater, container, false)
 
         binding.btnReset.setOnClickListener {
@@ -49,7 +48,6 @@ class LoginFragment : Fragment() {
                         if (task.isSuccessful) {
                             val idCurrentUser = FirebaseAuth.getInstance().currentUser?.uid
                             idCurrentUser?.let { userId ->
-
                                 val userRef = FirebaseDatabase.getInstance().getReference("Users").child(userId)
                                 userRef.child("password").setValue(password)
                                     .addOnCompleteListener { dbTask ->
@@ -62,12 +60,11 @@ class LoginFragment : Fragment() {
                                     .child(userId)
                                     .addListenerForSingleValueEvent(object : ValueEventListener {
                                         override fun onDataChange(snapshot: DataSnapshot) {
-
                                             SuccessfulToast(requireContext(), "Login successfully!").showToast()
-                                            Intent(requireContext(), HomeActivity::class.java).also {
-                                                startActivity(it)
-                                                requireActivity().finish()
-                                            }
+                                            val intent = Intent(requireContext(), HomeActivity::class.java)
+                                            intent.putExtra("userId", userId)
+                                            startActivity(intent)
+                                            requireActivity().finish()
                                         }
 
                                         override fun onCancelled(error: DatabaseError) {
@@ -76,7 +73,6 @@ class LoginFragment : Fragment() {
                                     })
                             }
                         } else {
-
                             FailToast(requireContext(), "Wrong email or password!").showToast()
                         }
                     }

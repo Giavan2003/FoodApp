@@ -2,8 +2,10 @@ package com.example.foodapp.activity.Cart_PlaceOrder
 
 import android.content.Intent
 import android.graphics.Color
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.example.foodapp.GlobalConfig
 import com.example.foodapp.custom.CustomMessageBox.FailToast
 import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast
@@ -40,9 +42,8 @@ class UpdateAddAddressActivity : AppCompatActivity() {
             }
             "update" -> {
                 binding.updateComplete.text = "Update"
-
-                FirebaseDatabase.getInstance().reference.child("Address")
-                    .child(userId).child(GlobalConfig.updateAddressId!!)
+                FirebaseDatabase.getInstance().reference.child("Address").child(userId)
+                    .child(GlobalConfig.updateAddressId!!)
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(snapshot: DataSnapshot) {
                             val address = snapshot.getValue(Address::class.java)
@@ -51,8 +52,8 @@ class UpdateAddAddressActivity : AppCompatActivity() {
                                 binding.phoneNumber.setText(it.receiverPhoneNumber)
                                 binding.detailAddress.setText(it.detailAddress)
                                 if (it.state == "default") {
-                                    binding.setDefault.isChecked = true
                                     binding.setDefault.isEnabled = false
+                                    binding.setDefault.isChecked = true
                                 } else {
                                     binding.setDefault.isChecked = false
                                 }
@@ -67,19 +68,19 @@ class UpdateAddAddressActivity : AppCompatActivity() {
         binding.updateComplete.setOnClickListener {
             if (validateAddressInfo()) {
                 if (binding.updateComplete.text == "Complete") {
-                    handleCompleteMode()
+                    handleAddAddress()
                 } else {
-                    handleUpdateMode()
+                    handleUpdateAddress()
                 }
             }
         }
     }
 
-    private fun handleCompleteMode() {
+    private fun handleAddAddress() {
         val addressId = FirebaseDatabase.getInstance().reference.push().key ?: return
         GlobalConfig.choseAddressId = addressId
 
-        val temp = Address(
+        val address = Address(
             addressId,
             binding.detailAddress.text.toString().trim(),
             if (binding.setDefault.isChecked) "default" else "",
@@ -88,21 +89,18 @@ class UpdateAddAddressActivity : AppCompatActivity() {
         )
 
         FirebaseDatabase.getInstance().reference.child("Address").child(userId).child(addressId)
-            .setValue(temp).addOnCompleteListener { task ->
+            .setValue(address).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     if (binding.setDefault.isChecked) {
-                        updateOtherAddresses(addressId)
+                        updateOtherAddressesToNonDefault(addressId)
                     }
-                    SuccessfulToast(this, "Added new address!").showToast()
-                    GlobalConfig.choseAddressId = addressId
-                    setResult(RESULT_OK, Intent())
-                    finish()
+                    showToastAndFinish("Added new address!")
                 }
             }
     }
 
-    private fun handleUpdateMode() {
-        val temp = Address(
+    private fun handleUpdateAddress() {
+        val address = Address(
             GlobalConfig.updateAddressId,
             binding.detailAddress.text.toString().trim(),
             if (binding.setDefault.isChecked) "default" else "",
@@ -111,27 +109,25 @@ class UpdateAddAddressActivity : AppCompatActivity() {
         )
 
         FirebaseDatabase.getInstance().reference.child("Address").child(userId).child(GlobalConfig.updateAddressId!!)
-            .setValue(temp).addOnCompleteListener { task ->
+            .setValue(address).addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     if (binding.setDefault.isChecked) {
-                        updateOtherAddresses(GlobalConfig.updateAddressId!!)
+                        updateOtherAddressesToNonDefault(GlobalConfig.updateAddressId!!)
                     }
-                    SuccessfulToast(this, "Updated chosen address!").showToast()
-                    setResult(RESULT_OK, Intent())
-                    finish()
+                    showToastAndFinish("Updated chosen address!")
                 }
             }
     }
 
-    private fun updateOtherAddresses(currentAddressId: String) {
+    private fun updateOtherAddressesToNonDefault(currentAddressId: String) {
         FirebaseDatabase.getInstance().reference.child("Address").child(userId)
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     for (ds in snapshot.children) {
                         val address = ds.getValue(Address::class.java)
                         if (address != null && address.addressId != currentAddressId) {
-                            FirebaseDatabase.getInstance().reference.child("Address")
-                                .child(userId).child(address.addressId!!).child("state").setValue("")
+                            FirebaseDatabase.getInstance().reference.child("Address").child(userId)
+                                .child(address.addressId!!).child("state").setValue("")
                         }
                     }
                 }
@@ -140,16 +136,20 @@ class UpdateAddAddressActivity : AppCompatActivity() {
             })
     }
 
+    private fun showToastAndFinish(message: String) {
+        SuccessfulToast(this, message).showToast()
+        setResult(RESULT_OK, Intent())
+        finish()
+    }
+
     private fun initToolbar() {
         window.statusBarColor = Color.parseColor("#E8584D")
         window.navigationBarColor = Color.parseColor("#E8584D")
         setSupportActionBar(binding.toolbar)
-
         supportActionBar?.apply {
             title = if (mode == "update") "Update address" else "Add address"
             setDisplayHomeAsUpEnabled(true)
         }
-
         binding.toolbar.setNavigationOnClickListener {
             setResult(RESULT_OK, Intent())
             finish()
@@ -158,15 +158,15 @@ class UpdateAddAddressActivity : AppCompatActivity() {
 
     private fun validateAddressInfo(): Boolean {
         return when {
-            binding.fullName.text.toString().isEmpty() -> {
+            binding.fullName.text.isNullOrEmpty() -> {
                 FailToast(this, "Receiver name must not be empty!").showToast()
                 false
             }
-            binding.phoneNumber.text.toString().isEmpty() -> {
+            binding.phoneNumber.text.isNullOrEmpty() -> {
                 FailToast(this, "Receiver phone number must not be empty!").showToast()
                 false
             }
-            binding.detailAddress.text.toString().isEmpty() -> {
+            binding.detailAddress.text.isNullOrEmpty() -> {
                 FailToast(this, "Detail address must not be empty!").showToast()
                 false
             }
@@ -174,3 +174,5 @@ class UpdateAddAddressActivity : AppCompatActivity() {
         }
     }
 }
+
+

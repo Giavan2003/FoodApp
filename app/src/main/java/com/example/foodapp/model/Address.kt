@@ -12,18 +12,15 @@ class Address {
     constructor(
         addressId: String?,
         detailAddress: String?,
-
+        state: String?,
         receiverName: String?,
-        receiverPhoneNumber: String?,
-        state: String?
+        receiverPhoneNumber: String?
     ) {
         this.addressId = addressId
         this.detailAddress = detailAddress
-
+        this.state = state
         this.receiverName = receiverName
         this.receiverPhoneNumber = receiverPhoneNumber
-        this.state = state
-
     }
 }
 

@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 import androidx.viewpager2.widget.ViewPager2.OnPageChangeCallback
+import com.example.foodapp.activity.Cart_PlaceOrder.ChangeAddressActivity
 import com.example.foodapp.activity.Home.HomeActivity
 import com.example.foodapp.adapter.Home.LoginSignUpAdapter
 import com.example.foodapp.databinding.ActivityLoginBinding
@@ -57,8 +58,19 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+
         if (FirebaseAuth.getInstance().currentUser != null) {
-            startActivity(Intent(this, HomeActivity::class.java))
-        }
-    }
+            val currentUser = FirebaseAuth.getInstance().currentUser
+            val userId = currentUser?.uid
+            if (userId != null) {
+
+                val intent = Intent(this, ChangeAddressActivity::class.java)
+                intent.putExtra("userId", userId)
+                startActivity(intent)
+                finish()
+            }
+        } else {
+            println("User is not logged in")
+        }}
 }
+
