@@ -108,7 +108,7 @@
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".activity.Home.LoginActivity"
+            android:name=".activity.ProductInformation.ProductInfoActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
@@ -125,10 +125,10 @@
             android:name=".activity.orderSellerManagement.DetailOfOrderDeliveryManagementActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
-        <activity
-            android:name=".activity.ProductInfomation.ProductInfoActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustPan" />
+<!--        <activity-->
+<!--            android:name=".activity.ProductInformation.ProductInfoActivity"-->
+<!--            android:exported="false"-->
+<!--            android:windowSoftInputMode="adjustPan" />-->
 
         <meta-data
             android:name="preloaded_fonts"

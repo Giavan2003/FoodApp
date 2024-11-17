@@ -54,7 +54,7 @@ class OrderAdapter(
         viewHolder.binding.txtId.text = tmp.billId ?: "Unknown"
         viewHolder.binding.txtDate.text = tmp.orderDate ?: "Unknown"
         viewHolder.binding.txtStatus.text = tmp.orderStatus ?: "Unknown"
-        viewHolder.binding.txtTotal.text = CurrencyFormatter.getInstance().format(tmp.totalPrice.toDouble())
+        viewHolder.binding.txtTotal.text = CurrencyFormatter.format(tmp.totalPrice.toDouble())
             .format(tmp.totalPrice.toDouble())
 
         // Hiển thị hình ảnh sản phẩm liên quan đến hóa đơn
