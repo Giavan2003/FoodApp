@@ -46,10 +46,10 @@
             android:name=".activity.feedback.FeedBackActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
-        <activity
-            android:name=".activity.order.OrderActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustPan" />
+<!--        <activity-->
+<!--            android:name=".activity.order.OrderActivity"-->
+<!--            android:exported="false"-->
+<!--            android:windowSoftInputMode="adjustPan" />-->
         <activity
             android:name=".activity.MyShop.MyShopActivity"
             android:exported="false"
@@ -95,7 +95,7 @@
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".activity.Home.IntroActivity"
+            android:name=".activity.order.OrderActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
