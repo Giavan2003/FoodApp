@@ -8,9 +8,28 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:419836120448:android:2d5ace59e6fd8301a18565",
+        "mobilesdk_app_id": "1:419836120448:android:da6cec1bf07501ada18565",
         "android_client_info": {
           "package_name": "com.example.foodapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6w34SKoi_wLk6znfQ6OPVBaJ4VTEbldI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:419836120448:android:2d5ace59e6fd8301a18565",
+        "android_client_info": {
+          "package_name": "com.uteating.foodapp"
         }
       },
       "oauth_client": [],

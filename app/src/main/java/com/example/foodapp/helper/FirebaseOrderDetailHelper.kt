@@ -2,20 +2,17 @@ package com.example.foodapp.helper
 
 
 
-import com.google.firebase.database.*
-import com.example.foodapp.Interface.APIService
-import com.example.foodapp.RetrofitClient
+
 import com.example.foodapp.model.BillInfo
 import com.example.foodapp.model.Product
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.google.firebase.database.*
+
 
 class FirebaseOrderDetailHelper {
 
     private val mDatabase: FirebaseDatabase = FirebaseDatabase.getInstance()
     private val mReferenceStatusOrder: DatabaseReference = mDatabase.reference
-    private var apiService: APIService? = null
+
     private val billInfos = mutableListOf<BillInfo>()
 
     interface DataStatus {
@@ -48,19 +45,13 @@ class FirebaseOrderDetailHelper {
         })
     }
 
-    fun readProductInfo(productId: String, dataStatus: DataStatus2?) {
+    fun readProductInfo(productId: String?, dataStatus: DataStatus2?) {
         mReferenceStatusOrder.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                apiService = RetrofitClient.retrofit!!.create(APIService::class.java)
-                apiService?.getProductInfor(productId)?.enqueue(object : Callback<Product> {
-                    override fun onResponse(call: Call<Product>, response: Response<Product>) {
-                        response.body()?.let {
-                            dataStatus?.DataIsLoaded(it)
-                        }
-                    }
-
-                    override fun onFailure(call: Call<Product>, t: Throwable) {}
-                })
+                val product = snapshot.child("Products").child(productId!!).getValue(
+                    Product::class.java
+                )
+                dataStatus?.DataIsLoaded(product!!)
             }
 
             override fun onCancelled(error: DatabaseError) {}

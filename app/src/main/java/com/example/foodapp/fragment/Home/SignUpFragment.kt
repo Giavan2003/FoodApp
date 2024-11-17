@@ -35,7 +35,6 @@ class SignUpFragment : Fragment() {
     ): View? {
 
         binding = FragmentSignUpBinding.inflate(inflater, container, false)
-
         binding.btnSignUp.setOnClickListener {
             if (check()) {
                 val phone = binding.edtPhone.text.toString()
@@ -43,7 +42,7 @@ class SignUpFragment : Fragment() {
                 val username = binding.edtName.text.toString()
                 val email = binding.edtEmail.text.toString()
                 val pass = binding.edtPass.text.toString()
-
+                val fullname = "TUNGNT"
                 dialog = LoadingDialog(requireContext())
                 dialog.show()
 

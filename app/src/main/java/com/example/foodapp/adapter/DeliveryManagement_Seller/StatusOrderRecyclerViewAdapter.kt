@@ -14,9 +14,9 @@ import androidx.annotation.NonNull
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.firebase.database.*
-import com.example.foodapp.Interface.APIService
+
 import com.example.foodapp.R;
-import com.example.foodapp.RetrofitClient
+
 import com.example.foodapp.activity.orderSellerManagement.DetailOfOrderDeliveryManagementActivity
 import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast
 import com.example.foodapp.databinding.ItemOrderStatusListBinding
@@ -26,9 +26,7 @@ import com.example.foodapp.model.Bill
 import com.example.foodapp.model.BillInfo
 import com.example.foodapp.model.Notification
 import com.example.foodapp.model.Product
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -37,7 +35,7 @@ class StatusOrderRecyclerViewAdapter(
     private val billList: List<Bill>
 ) : RecyclerView.Adapter<StatusOrderRecyclerViewAdapter.ViewHolder>() {
 
-    private var apiService: APIService? = null
+
     private var remainAmount: Int = 0
     private var sold: Int = 0
 
@@ -188,28 +186,26 @@ class StatusOrderRecyclerViewAdapter(
     private fun checkRemainAmountForAllProducts(billInfoList: List<BillInfo>, callback: (Boolean) -> Unit) {
         val pendingRequests = AtomicInteger(billInfoList.size)
         val allValid = AtomicBoolean(true)
+        val databaseReference = FirebaseDatabase.getInstance().getReference("Products")
 
         for (billInfo in billInfoList) {
-            val sold = billInfo.amount
-            val apiService = RetrofitClient.retrofit!!.create(APIService::class.java)
-            billInfo.productId?.let {
-                apiService.getProductInfor(it).enqueue(object : Callback<Product> {
-                    override fun onResponse(call: Call<Product>, response: Response<Product>) {
-                        if (response.isSuccessful && response.body() != null) {
-                            val product = response.body()
-                            val remainAmount = product?.remainAmount ?: 0
-                            if (remainAmount < sold) {
-                                allValid.set(false)
-                            }
-                        } else {
+            sold = billInfo.amount
+            val productId = billInfo.productId
+
+            productId?.let {
+                databaseReference.child(it).addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val product = snapshot.getValue(Product::class.java)
+                        remainAmount = product?.remainAmount ?: 0
+                        if (remainAmount < sold) {
                             allValid.set(false)
                         }
+                        // Kiểm tra nếu tất cả các yêu cầu đã hoàn thành
                         if (pendingRequests.decrementAndGet() == 0) {
                             callback(allValid.get())
                         }
                     }
-
-                    override fun onFailure(call: Call<Product>, t: Throwable) {
+                    override fun onCancelled(error: DatabaseError) {
                         allValid.set(false)
                         if (pendingRequests.decrementAndGet() == 0) {
                             callback(false)
@@ -218,10 +214,10 @@ class StatusOrderRecyclerViewAdapter(
                 })
             }
         }
-
-        // If there are no items in the list, directly call the callback with false
+        // Nếu danh sách `billInfoList` trống, gọi callback với giá trị `false`
         if (billInfoList.isEmpty()) {
             callback(false)
         }
     }
+
 }

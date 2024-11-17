@@ -29,7 +29,6 @@ class LoadingDialog(context: Context) {
             dialog.dismiss()
         }
     }
-
     fun setContentView(animation: Int) {
         dialog.setContentView(animation)
     }

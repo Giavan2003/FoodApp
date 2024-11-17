@@ -1,16 +1,15 @@
 package com.example.foodapp.helper
 
 
-import android.util.Log
-import com.google.firebase.database.*
-import com.example.foodapp.Interface.APIService
-import com.example.foodapp.RetrofitClient
+
 import com.example.foodapp.model.Bill
 import com.example.foodapp.model.BillInfo
-import com.example.foodapp.model.Product
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+
 
 class FirebaseStatusOrderHelper(private val userId: String? = null) {
     private val mDatabase: FirebaseDatabase = FirebaseDatabase.getInstance()
@@ -18,7 +17,7 @@ class FirebaseStatusOrderHelper(private val userId: String? = null) {
     private val bills = mutableListOf<Bill>()
     private val billInfoList = mutableListOf<BillInfo>()
     private val soldValueList = mutableListOf<Int>()
-    private var apiService: APIService = RetrofitClient.retrofit!!.create(APIService::class.java)
+
 
     interface DataStatus {
         fun dataIsLoaded(bills: List<Bill>, isExistingBill: Boolean)
@@ -29,7 +28,7 @@ class FirebaseStatusOrderHelper(private val userId: String? = null) {
 
     fun readConfirmBills(userId: String, dataStatus: DataStatus?) {
         // Đọc và lấy các hoá đơn có trạng thái "Confirm" của một user
-        mReferenceStatusOrder.addValueEventListener(object : ValueEventListener {
+        mReferenceStatusOrder.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 bills.clear()
                 var isExistingBill = false
@@ -52,7 +51,7 @@ class FirebaseStatusOrderHelper(private val userId: String? = null) {
 
     fun readShippingBills(userId: String, dataStatus: DataStatus?) {
         // Đọc và lấy các hoá đơn có trạng thái "Shipping" của một user
-        mReferenceStatusOrder.addValueEventListener(object : ValueEventListener {
+        mReferenceStatusOrder.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 bills.clear()
                 var isExistingShippingBill = false
@@ -75,7 +74,7 @@ class FirebaseStatusOrderHelper(private val userId: String? = null) {
 
     fun readCompletedBills(userId: String, dataStatus: DataStatus?) {
         // Đọc và lấy các hoá đơn có trạng thái "Completed" của một user
-        mReferenceStatusOrder.addValueEventListener(object : ValueEventListener {
+        mReferenceStatusOrder.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 bills.clear()
                 var isExistingBill = false
@@ -91,7 +90,6 @@ class FirebaseStatusOrderHelper(private val userId: String? = null) {
                 }
                 dataStatus?.dataIsLoaded(bills, isExistingBill)
             }
-
             override fun onCancelled(error: DatabaseError) {}
         })
     }
@@ -129,42 +127,28 @@ class FirebaseStatusOrderHelper(private val userId: String? = null) {
             }
     }
 
-    private fun readSomeInfoOfBill() {
-        // Đọc thông tin về số lượng bán và cập nhật các giá trị liên quan cho các sản phẩm trong hoá đơn.
-        for (info in billInfoList) {
-            info.productId?.let {
-                apiService.getProductInfor(it).enqueue(object : Callback<Product> {
-                    override fun onResponse(call: Call<Product>, response: Response<Product>) {
-                        if (response.isSuccessful && response.body() != null) {
-                            val pro = response.body()!!
-                            if (info.productId == pro.productId) {
-                                val sold = info.amount + pro.sold
-                                val amount = pro.remainAmount
-                                soldValueList.add(sold)
-                                pro.sold = sold
-                                pro.remainAmount = amount - sold
-                                updateSoldValueOfProduct(pro)
-                            }
-                        }
-                    }
-
-                    override fun onFailure(call: Call<Product>, t: Throwable) {}
-                })
+    fun readSomeInfoOfBill() {
+        mReferenceStatusOrder.child("Products").addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (info in billInfoList) {
+                    val sold = snapshot.child(info.productId!!).child("sold").getValue(Int::class.java) ?: 0
+                    val newSoldValue = sold + info.amount
+                    soldValueList.add(newSoldValue)
+                }
+                updateSoldValueOfProduct()
             }
-        }
+
+            override fun onCancelled(error: DatabaseError) {}
+        })
     }
 
-    private fun updateSoldValueOfProduct(pro: Product) {
-        apiService.updateProduct(pro).enqueue(object : Callback<Product> {
-            override fun onResponse(call: Call<Product>, response: Response<Product>) {
-                if (response.isSuccessful) {
-                    Log.d("FirebaseStatusOrderHelper", "Product updated successfully.")
-                }
-            }
 
-            override fun onFailure(call: Call<Product>, t: Throwable) {
-                Log.e("FirebaseStatusOrderHelper", "Failed to update product: ${t.message}")
-            }
-        })
+    fun updateSoldValueOfProduct() {
+        for (i in billInfoList.indices) {
+            mReferenceStatusOrder.child("Products").child(billInfoList[i].productId!!).child("sold")
+                .setValue(
+                    soldValueList[i]
+                )
+        }
     }
 }

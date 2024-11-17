@@ -2,7 +2,6 @@ package com.example.foodapp.activity.MyShop
 
 import android.Manifest
 import android.app.Activity
-
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -19,16 +18,14 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.bumptech.glide.Glide
-import com.example.foodapp.Interface.APIService
 import com.example.foodapp.R
-import com.example.foodapp.RetrofitClient
-
 import com.example.foodapp.custom.CustomMessageBox.FailToast
 import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast
 import com.example.foodapp.databinding.ActivityAddFoodBinding
 import com.example.foodapp.dialog.UploadDialog
 import com.example.foodapp.model.Product
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
@@ -36,9 +33,6 @@ import com.karumi.dexter.listener.PermissionDeniedResponse
 import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 
 class AddFoodActivity : AppCompatActivity() {
@@ -64,7 +58,7 @@ class AddFoodActivity : AppCompatActivity() {
     private var productUpdate: Product? = null
     private var checkUpdate = false
     private var userId: String? = null
-    private lateinit var apiService: APIService
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddFoodBinding.inflate(layoutInflater)
@@ -73,8 +67,7 @@ class AddFoodActivity : AppCompatActivity() {
         window.navigationBarColor = Color.parseColor("#E8584D")
         //Nhận intent từ edit--------------
         val intentUpdate = intent
-        //userId = FirebaseAuth.getInstance().currentUser!!.uid
-        userId = "1"
+        userId = FirebaseAuth.getInstance().currentUser!!.uid
         if (intentUpdate != null && intentUpdate.hasExtra("Product updating")) {
             productUpdate = intentUpdate.getSerializableExtra("Product updating") as Product?
             checkUpdate = true
@@ -303,71 +296,63 @@ class AddFoodActivity : AppCompatActivity() {
     }
 
     fun uploadProduct(tmp: Product) {
-        apiService = RetrofitClient.retrofit!!.create(APIService::class.java)
+
         if (checkUpdate) {
             tmp.productId = productUpdate!!.productId
-            apiService.updateProduct(tmp).enqueue(object : Callback<Product?> {
-                override fun onResponse(call: Call<Product?>, response: Response<Product?>) {
-                    if (response.isSuccessful) {
-                        uploadDialog!!.dismiss()
-                        val reIntent = Intent()
-                        reIntent.putExtra("productId", tmp.productId)
-                        reIntent.putExtra("productName", tmp.productName)
-                        reIntent.putExtra("productPrice", tmp.productPrice)
-                        reIntent.putExtra("productImage1", tmp.productImage1)
-                        reIntent.putExtra("productImage2", tmp.productImage2)
-                        reIntent.putExtra("productImage3", tmp.productImage3)
-                        reIntent.putExtra("productImage4", tmp.productImage4)
-                        reIntent.putExtra("ratingStar", tmp.ratingStar)
-                        reIntent.putExtra("productDescription", tmp.description)
-                        reIntent.putExtra("publisherId", tmp.publisherId)
-                        reIntent.putExtra("sold", tmp.sold)
-                        reIntent.putExtra("productType", tmp.productType)
-                        reIntent.putExtra("remainAmount", tmp.remainAmount)
-                        reIntent.putExtra("ratingAmount", tmp.ratingAmount)
-                        reIntent.putExtra("state", tmp.state)
-                        reIntent.putExtra("userId", userId)
-                        reIntent.putExtra("userName", tmp)
-                        setResult(10, reIntent)
-                        finish()
-                        SuccessfulToast(
-                            this@AddFoodActivity,
-                            "Update product successfully"
-                        ).showToast()
-                        Log.d("Update", "Cập nhật sản phẩm thành công")
-                    } else {
-                        uploadDialog!!.dismiss()
-                        FailToast(this@AddFoodActivity, "Some error occurred!").showToast()
-                        Log.e("Update", "Lỗi cập nhật sản phẩm")
+            FirebaseDatabase.getInstance().reference.child("Products")
+                .child(productUpdate!!.productId!!).setValue(tmp).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val imageURL = java.lang.StringBuilder()
+                    handleImagePosition(imageURL, position)
+                    if (!imageURL.toString().isEmpty()) {
+                        FirebaseStorage.getInstance().getReferenceFromUrl(imageURL.toString())
+                            .delete()
                     }
+                    uploadDialog!!.dismiss()
+                    val reIntent = Intent()
+                    reIntent.putExtra("productId", tmp.productId)
+                    reIntent.putExtra("productName", tmp.productName)
+                    reIntent.putExtra("productPrice", tmp.productPrice)
+                    reIntent.putExtra("productImage1", tmp.productImage1)
+                    reIntent.putExtra("productImage2", tmp.productImage2)
+                    reIntent.putExtra("productImage3", tmp.productImage3)
+                    reIntent.putExtra("productImage4", tmp.productImage4)
+                    reIntent.putExtra("ratingStar", tmp.ratingStar)
+                    reIntent.putExtra("productDescription", tmp.description)
+                    reIntent.putExtra("publisherId", tmp.publisherId)
+                    reIntent.putExtra("sold", tmp.sold)
+                    reIntent.putExtra("productType", tmp.productType)
+                    reIntent.putExtra("remainAmount", tmp.remainAmount)
+                    reIntent.putExtra("ratingAmount", tmp.ratingAmount)
+                    reIntent.putExtra("state", tmp.state)
+                    reIntent.putExtra("userId", userId)
+                    reIntent.putExtra("userName", tmp)
+                    setResult(10, reIntent)
+                    SuccessfulToast(this@AddFoodActivity, "Update successfully!").showToast()
+                    Log.d("Update", "Cập nhật sản phẩm thành công")
+                    finish()
+                } else {
+                    uploadDialog!!.dismiss()
+                    FailToast(this@AddFoodActivity, "Some errors occurred!").showToast()
+                    Log.e("Update", "Lỗi cập nhật sản phẩm")
+                    finish()
                 }
-
-                override fun onFailure(call: Call<Product?>, t: Throwable) {
-                    Log.e("Update1", "Lỗi cập nhật sản phẩm")
-                }
-            })
+            }
         } else {
-            apiService.addProduct(tmp).enqueue(object : Callback<Product?> {
-                override fun onResponse(call: Call<Product?>, response: Response<Product?>) {
-                    if (response.isSuccessful) {
-                        uploadDialog!!.dismiss()
-                        finish()
-                        SuccessfulToast(
-                            this@AddFoodActivity,
-                            "Add product successfully!"
-                        ).showToast()
-                        Log.d(TAG, "Thêm sản phẩm thành công")
-                    } else {
-                        uploadDialog!!.dismiss()
-                        FailToast(this@AddFoodActivity, "Some error occurred!").showToast()
-                        Log.e(TAG, "Lỗi thêm sản phẩm")
-                    }
+            val reference = FirebaseDatabase.getInstance().reference.child("Products").push()
+            tmp.productId = reference.key
+            reference.setValue(tmp).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    uploadDialog!!.dismiss()
+                    finish()
+                    SuccessfulToast(this@AddFoodActivity, "Add product successfully!").showToast()
+                    Log.d(TAG, "Thêm sản phẩm thành công");
+                } else {
+                    uploadDialog!!.dismiss()
+                    FailToast(this@AddFoodActivity, "Some error occurred!").showToast()
+                    Log.e(TAG, "Lỗi thêm sản phẩm")
                 }
-
-                override fun onFailure(call: Call<Product?>, t: Throwable) {
-                    Log.e(TAG, t.message!!)
-                }
-            })
+            }
         }
     }
 

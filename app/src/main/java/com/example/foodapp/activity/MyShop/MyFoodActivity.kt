@@ -4,25 +4,25 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.NonNull
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.foodapp.Interface.APIService
-import com.example.foodapp.RetrofitClient
-import com.example.foodapp.adapter.MyShopAdapter.MyShopAdapter
+import com.example.foodapp.adapter.MyShopAdapter.MyFoodAdapter
 import com.example.foodapp.databinding.ActivityMyFoodBinding
 import com.example.foodapp.dialog.LoadingDialog
 import com.example.foodapp.model.Product
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+
 
 class MyFoodActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMyFoodBinding
     private val ds: MutableList<Product> = ArrayList()
-    private lateinit var adapter: MyShopAdapter
-    private var userId: String? = null
-    private lateinit var apiService: APIService
+    private lateinit var adapter: MyFoodAdapter
+    private lateinit var userId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,16 +32,15 @@ class MyFoodActivity : AppCompatActivity() {
         window.statusBarColor = Color.parseColor("#E8584D")
         window.navigationBarColor = Color.parseColor("#E8584D")
 
-        userId = intent.getStringExtra("userId")
-        adapter = MyShopAdapter(ds, this, userId ?: "")
+        userId = intent.getStringExtra("userId").toString()
+
+        adapter = MyFoodAdapter(ds, this, userId)
         binding.recycleView.setHasFixedSize(true)
         binding.recycleView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         binding.recycleView.adapter = adapter
-
         binding.imgBack.setOnClickListener {
             finish()
         }
-
         binding.flpAddFood.setOnClickListener {
             val intent = Intent(this, AddFoodActivity::class.java)
             intent.putExtra("userId", userId)
@@ -53,24 +52,28 @@ class MyFoodActivity : AppCompatActivity() {
         super.onStart()
         val dialog = LoadingDialog(this)
         dialog.show()
-
-        apiService = RetrofitClient.retrofit!!.create(APIService::class.java)
-        apiService.getProductsPublisherId(userId ?: "").enqueue(object : Callback<List<Product>> {
-            override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
-                val lstProduct = response.body()
-                if (response.isSuccessful && lstProduct != null) {
+        FirebaseDatabase.getInstance().getReference("Products")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
                     ds.clear()
-                    ds.addAll(lstProduct)
-                    dialog.dismiss()
+                    var i = 0
+                    for (item in snapshot.children) {
+                        Log.e("Thông báo", i++.toString())
+                        val tmp = item.getValue(Product::class.java)
+                        if (tmp != null && tmp.publisherId != null) {
+                            if (tmp.publisherId == userId && tmp.state != "deleted") {
+                                ds.add(tmp)
+                            }
+                        }
+                    }
                     adapter.notifyDataSetChanged()
-                    Log.d("userid", userId ?: "")
-                    Log.d("List food", ds.size.toString())
+                    dialog.dismiss()
                 }
-            }
+                override fun onCancelled(error: DatabaseError) {
 
-            override fun onFailure(call: Call<List<Product>>, t: Throwable) {
-                Log.e("MyFoodActivity", "API call failed", t)
-            }
-        })
+                    Log.e("Lỗi Firebase", error.message)
+                    dialog.dismiss()  // Đảm bảo đóng dialog khi có lỗi
+                }
+            })
     }
 }
