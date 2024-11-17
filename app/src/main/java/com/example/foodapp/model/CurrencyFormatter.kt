@@ -1,12 +1,22 @@
-package com.example.foodapp.model
-
 import java.text.NumberFormat
-import java.util.Locale
+import java.util.*
 
-object CurrencyFormatter {
-    private val vnFormatCurrency: NumberFormat = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+class CurrencyFormatter private constructor() {
 
-    fun format(amount: Double): String {
-        return vnFormatCurrency.format(amount)
+    private val VNFormatCurrency: NumberFormat = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
+
+    companion object {
+        @Volatile
+        private var formatter: CurrencyFormatter? = null
+
+        fun getFormatter(): CurrencyFormatter {
+            return formatter ?: synchronized(this) {
+                formatter ?: CurrencyFormatter().also { formatter = it }
+            }
+        }
+    }
+
+    fun format(plainText: Double): String {
+        return VNFormatCurrency.format(plainText)
     }
 }

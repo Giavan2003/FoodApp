@@ -55,10 +55,7 @@
             android:name=".activity.order.OrderActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
-        <activity
-         android:name=".activity.Home.IntroActivity"
-         android:exported="false"
-         android:windowSoftInputMode="adjustPan" />
+
         <activity
             android:name=".activity.order.OrderDetailActivity"
             android:exported="false"
@@ -95,16 +92,16 @@
             android:name=".activity.Home.FindActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
-<!--        <activity-->
-<!--            android:name=".activity.Home.LoginActivity"-->
-<!--            android:exported="false"-->
-<!--            android:windowSoftInputMode="adjustPan" />-->
+        <activity
+            android:name=".activity.Home.LoginActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".activity.manager.ManagerUserActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".activity.Home.LoginActivity"
+            android:name=".activity.Home.IntroActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
@@ -122,7 +119,7 @@
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
         <activity
-            android:name=".activity.ProductInfomation.ProductInfoActivity"
+            android:name=".activity.ProductInformation.ProductInfoActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
 

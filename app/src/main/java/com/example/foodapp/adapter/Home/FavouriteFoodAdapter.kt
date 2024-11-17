@@ -7,7 +7,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.foodapp.R
-import com.example.foodapp.activity.ProductInfomation.ProductInfoActivity
+import com.example.foodapp.activity.ProductInformation.ProductInfoActivity
+
 import com.example.foodapp.databinding.ItemFavouriteProductBinding
 import com.example.foodapp.model.Product
 import com.google.firebase.database.DataSnapshot

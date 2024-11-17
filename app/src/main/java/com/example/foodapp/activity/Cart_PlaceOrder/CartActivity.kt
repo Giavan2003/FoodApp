@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,6 +21,7 @@ import com.google.firebase.database.ValueEventListener
 
 class CartActivity : AppCompatActivity() {
     private lateinit var userId: String
+    private lateinit var cartId: String
     private lateinit var binding: ActivityCartBinding
 
     private lateinit var cartProductAdapter: CartProductAdapter
@@ -35,7 +37,7 @@ class CartActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         userId = intent.getStringExtra("userId") ?: ""
-
+        cartId = intent.getStringExtra("cartId") ?: ""
         initToolbar()
         initProceedOrderLauncher()
 
@@ -73,7 +75,7 @@ class CartActivity : AppCompatActivity() {
                 for (ds in snapshot.children) {
                     val cart = ds.getValue(Cart::class.java)
                     if (cart?.userId == userId) {
-                        FirebaseDatabase.getInstance().reference.child("CartInfos").child(cart.cartId!!)
+                        FirebaseDatabase.getInstance().reference.child("CartInfos").child(cartId!!)
                             .addListenerForSingleValueEvent(object : ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
                                     cartInfoList.clear()
@@ -110,8 +112,16 @@ class CartActivity : AppCompatActivity() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 for (ds in snapshot.children) {
                     val cart = ds.getValue(Cart::class.java)
+
+                    // In ra thông tin userId và cartId để kiểm tra
+                    Log.d("CartActivity", "userId: $userId")
+                    Log.d("CartActivity", "cartId: ${cart?.cartId}")
+
                     if (cart?.userId == userId) {
-                        cartInfoList.reverse()
+                        // Nếu cartId không null thì tiếp tục lấy thông tin CartInfos
+                        Log.d("CartActivity", "Cart found for userId: $userId, cartId: ${cart.cartId}")
+
+                        cartInfoList.clear()  // Xóa danh sách sản phẩm cũ
                         cartProductAdapter = CartProductAdapter(this@CartActivity, cartInfoList, cart.cartId!!, isCheckAll, userId).apply {
                             setAdapterItemListener(object : IAdapterItemListener {
                                 override fun onCheckedItemCountChanged(count: Int, price: Long, selectedItems: ArrayList<CartInfo?>?) {
@@ -147,17 +157,25 @@ class CartActivity : AppCompatActivity() {
                                     }
                                     cartInfoList.reverse()
                                     cartProductAdapter.notifyDataSetChanged()
+
+                                    // In ra số lượng cartInfo đã được thêm vào danh sách
+                                    Log.d("CartActivity", "Cart info size: ${cartInfoList.size}")
                                 }
 
-                                override fun onCancelled(error: DatabaseError) {}
+                                override fun onCancelled(error: DatabaseError) {
+                                    Log.e("CartActivity", "Error getting CartInfos: ${error.message}")
+                                }
                             })
                     }
                 }
             }
 
-            override fun onCancelled(error: DatabaseError) {}
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("CartActivity", "Error getting Carts: ${error.message}")
+            }
         })
     }
+
 
     private fun initToolbar() {
         window.statusBarColor = Color.parseColor("#E8584D")

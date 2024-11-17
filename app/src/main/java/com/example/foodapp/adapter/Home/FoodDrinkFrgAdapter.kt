@@ -9,7 +9,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.Target
-import com.example.foodapp.activity.ProductInfomation.ProductInfoActivity
+import com.example.foodapp.activity.ProductInformation.ProductInfoActivity
+
 import com.example.foodapp.databinding.ItemHomeBinding
 import com.example.foodapp.databinding.ItemProgressbarBinding
 import com.example.foodapp.model.Product

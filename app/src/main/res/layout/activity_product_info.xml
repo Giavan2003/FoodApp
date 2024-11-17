@@ -252,20 +252,8 @@
                 app:layout_constraintHorizontal_bias="0.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/constraintLayout2"
-                app:layout_constraintVertical_bias="0.0"><![CDATA[
+                app:layout_constraintVertical_bias="1.0">
 
-
-
-
-                />
-
-
-
-
-
-
-
-                ]]>
 
                 <RatingBar
                     android:id="@+id/ratingBar"

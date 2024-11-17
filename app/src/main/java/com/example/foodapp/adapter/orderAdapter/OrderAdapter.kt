@@ -18,7 +18,6 @@ import com.example.foodapp.databinding.ItemOrderLayoutBinding
 import com.example.foodapp.helper.FirebaseStatusOrderHelper
 import com.example.foodapp.model.Bill
 import com.example.foodapp.model.BillInfo
-import com.example.foodapp.model.CurrencyFormatter
 import com.example.foodapp.model.Product
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -49,15 +48,10 @@ class OrderAdapter(
 
     override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
         val tmp: Bill = dsOrder!![position]
-
-        // Cập nhật thông tin hóa đơn vào giao diện
         viewHolder.binding.txtId.text = tmp.billId ?: "Unknown"
         viewHolder.binding.txtDate.text = tmp.orderDate ?: "Unknown"
         viewHolder.binding.txtStatus.text = tmp.orderStatus ?: "Unknown"
-        viewHolder.binding.txtTotal.text = CurrencyFormatter.getInstance().format(tmp.totalPrice.toDouble())
-            .format(tmp.totalPrice.toDouble())
-
-        // Hiển thị hình ảnh sản phẩm liên quan đến hóa đơn
+        viewHolder.binding.txtTotal.text = CurrencyFormatter.getFormatter().format(tmp.totalPrice.toDouble())
         tmp.billId?.let { billId ->
             FirebaseDatabase.getInstance().getReference("BillInfos").child(billId)
                 .addListenerForSingleValueEvent(object : ValueEventListener {

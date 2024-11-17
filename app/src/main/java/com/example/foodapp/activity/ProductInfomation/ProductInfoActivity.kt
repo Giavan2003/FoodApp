@@ -1,5 +1,6 @@
 package com.example.foodapp.activity.ProductInformation
 
+import CurrencyFormatter
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
@@ -106,7 +107,7 @@ class ProductInfoActivity : AppCompatActivity() {
 
     private fun setupDefaultValues() {
         binding.txtNameProduct.text = productName
-        binding.txtPriceProduct.text = CurrencyFormatter.format(productPrice.toDouble())
+        binding.txtPriceProduct.text = CurrencyFormatter.getFormatter().format(productPrice.toDouble())
         binding.txtDesciption.text = productDescription
         binding.txtSell.text = sold.toString()
         binding.ratingBar.rating = ratingStar.toFloat()
@@ -137,14 +138,15 @@ class ProductInfoActivity : AppCompatActivity() {
         binding.tabDots.attachTo(binding.pagerProductImage)
     }
 
-    private fun setCommentRecView() {
+    private fun setupCommentRecyclerView() {
         FirebaseProductInfoHelper(productId).readComments(object : FirebaseProductInfoHelper.DataStatus {
             override fun DataIsLoaded(commentList: List<Comment>, count: Int, keys: List<String>) {
                 val adapter = CommentRecyclerViewAdapter(this@ProductInfoActivity, commentList, keys)
                 binding.recComment.apply {
                     setHasFixedSize(true)
                     layoutManager = LinearLayoutManager(this@ProductInfoActivity)
-                    adapter = adapter
+
+                    this.adapter = adapter
                 }
                 binding.txtRate.text = "($count)"
             }
@@ -154,6 +156,7 @@ class ProductInfoActivity : AppCompatActivity() {
             override fun DataIsDeleted() {}
         })
     }
+
 
 
 
@@ -178,6 +181,21 @@ class ProductInfoActivity : AppCompatActivity() {
 
         binding.btnAddToCart.setOnClickListener {
             updateCart(isCartExists[0], isProductExists[0], currentCart[0], currentCartInfo[0], 1)
+        }
+        binding.btnBack.setOnClickListener { finish() }
+
+        binding.btnChat.setOnClickListener {
+            val intent = Intent(this@ProductInfoActivity, ChatDetailActivity::class.java)
+            intent.setAction("productInfoActivity")
+            intent.putExtra("publisherId", publisherId)
+            startActivity(intent)
+        }
+        binding.btnEditProduct.setOnClickListener {
+            val intent = Intent(this@ProductInfoActivity, AddFoodActivity::class.java)
+            val product = Product(productId, productName, productImage1, productImage2, productImage3, productImage4, productPrice,
+                productType, remainAmount, sold, productDescription, ratingStar, ratingAmount, publisherId, state)
+            intent.putExtra("Product updating", product)
+            startActivity(intent)
         }
     }
 

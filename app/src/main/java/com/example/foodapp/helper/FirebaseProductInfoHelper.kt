@@ -1,8 +1,9 @@
 package com.example.foodapp.helper
 
+import com.example.foodapp.model.Comment
 import com.example.foodapp.model.Product
 import com.google.firebase.database.*
-import org.w3c.dom.Comment
+
 
 class FirebaseProductInfoHelper(private val productId: String) {
 

@@ -11,7 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.foodapp.R
 import com.example.foodapp.activity.Home.ChatDetailActivity
-import com.example.foodapp.activity.ProductInfomation.ProductInfoActivity
+import com.example.foodapp.activity.ProductInformation.ProductInfoActivity
+
 import com.example.foodapp.activity.order.OrderDetailActivity
 import com.example.foodapp.activity.orderSellerManagement.DeliveryManagementActivity
 import com.example.foodapp.databinding.ItemNotificationBinding

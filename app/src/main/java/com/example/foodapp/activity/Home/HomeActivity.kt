@@ -1,12 +1,12 @@
 package com.example.foodapp.activity.Home
 
-
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.LinearLayout
@@ -17,7 +17,6 @@ import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import com.example.foodapp.R
 import com.example.foodapp.activity.Cart_PlaceOrder.CartActivity
-import com.example.foodapp.activity.Cart_PlaceOrder.EmptyCartActivity
 import com.example.foodapp.activity.MyShop.MyShopActivity
 import com.example.foodapp.activity.order.OrderActivity
 import com.example.foodapp.custom.CustomMessageBox.CustomAlertDialog
@@ -35,7 +34,6 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import meow.bottomnavigation.MeowBottomNavigation
 
-
 class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     private lateinit var userId: String
     private lateinit var binding: ActivityHomeBinding
@@ -52,7 +50,11 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Lấy userId từ Firebase Auth
         userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+        // In userId ra console
+        Log.d("aaaaaaaaaaaaaaaaaaaaaaa", "User ID: $userId")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermission(Manifest.permission.POST_NOTIFICATIONS, 101)
@@ -63,8 +65,6 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         initUI()
         loadInformationForNavigationBar()
     }
-
-
 
     private fun initUI() {
         window.statusBarColor = Color.parseColor("#E8584D")
@@ -86,45 +86,44 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         binding.toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.message_menu -> {
-                    val userId = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
-                    val intent = Intent(this, ChatActivity::class.java).apply {
-                        putExtra("userId", userId)
-                    }
+                    val intent = Intent(this@HomeActivity, ChatActivity::class.java)
+                    intent.putExtra("userId", userId)
                     startActivity(intent)
-                    true
                 }
                 R.id.cart_menu -> {
-                    val userId = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
-                    FirebaseDatabase.getInstance().reference.child("Carts").addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            for (ds in snapshot.children) {
-                                val cart = ds.getValue(Cart::class.java)
-                                if (cart?.userId == userId) {
-                                    FirebaseDatabase.getInstance().reference.child("CartInfos").child(cart.cartId!!)
-                                        .addListenerForSingleValueEvent(object : ValueEventListener {
-                                            override fun onDataChange(snapshot: DataSnapshot) {
-                                                val intent = if (snapshot.childrenCount == 0L) {
-                                                    Intent(this@HomeActivity, EmptyCartActivity::class.java)
-                                                } else {
-                                                    Intent(this@HomeActivity, CartActivity::class.java).apply {
-                                                        putExtra("userId", userId)
-                                                    }
-                                                }
-                                                startActivity(intent)
-                                            }
 
-                                            override fun onCancelled(error: DatabaseError) {}
-                                        })
+                    FirebaseDatabase.getInstance().reference.child("Carts")
+                        .addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                var cartFound = false
+                                snapshot.children.forEach { ds ->
+                                    val cart = ds.getValue(Cart::class.java)
+                                    if (cart?.userId == userId) {
+                                        cartFound = true
+                                        val cartId = ds.key ?: "" // Lấy cartId từ key của dữ liệu
+                                        Log.d("HomeActivity", "Cart ID: $cartId") // In cartId ra console
+                                        // Mở CartActivity và truyền userId, cartId vào
+                                        val intent = Intent(this@HomeActivity, CartActivity::class.java).apply {
+                                            putExtra("userId", userId)
+                                            putExtra("cartId", cartId) // Gửi cartId vào Intent
+                                        }
+                                        startActivity(intent)
+                                    }
+                                }
+                                if (!cartFound) {
+                                    // Nếu không tìm thấy giỏ hàng, không làm gì (bỏ EmptyCartActivity)
+                                    Log.d("HomeActivity", "No cart found for user: $userId")
                                 }
                             }
-                        }
 
-                        override fun onCancelled(error: DatabaseError) {}
-                    })
-                    true
+                            override fun onCancelled(error: DatabaseError) {
+                                // Xử lý lỗi nếu cần
+                                Log.e("HomeActivity", "Firebase error: ${error.message}")
+                            }
+                        })
                 }
-                else -> false
             }
+            true
         }
     }
 
@@ -236,9 +235,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
-
-
     private fun loadInformationForNavigationBar() {
-
+        // Phương thức này có thể được sử dụng để tải thêm thông tin cần thiết cho thanh điều hướng
     }
 }
