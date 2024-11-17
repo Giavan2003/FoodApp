@@ -22,7 +22,8 @@ import retrofit2.Response
 
 
 class DrinkHomeFrg(private val userId: String) : Fragment() {
-    private lateinit var dsCurrentDrink: MutableList<Product>
+    private lateinit var dsCurrentDrink: MutableList<Product?>
+
     private lateinit var totalDrink: List<Product>
     private lateinit var binding: FragmentDrinkHomeFrgBinding
     private lateinit var adapter: FoodDrinkFrgAdapter
@@ -81,24 +82,23 @@ class DrinkHomeFrg(private val userId: String) : Fragment() {
                     }
                     adapter.notifyDataSetChanged()
                 } else {
-                    // Handle the error case if needed
+
                 }
             }
 
             override fun onFailure(call: Call<List<Product>>, t: Throwable) {
-                // Handle failure case
+
             }
         })
     }
 
     private fun loadMore() {
         if (position < totalDrink.size) {
-            lateinit var dsCurrentDrink: MutableList<Product?>
             dsCurrentDrink.add(null)
 
             adapter.notifyItemInserted(dsCurrentDrink.size - 1)
             Handler(Looper.getMainLooper()).postDelayed({
-                dsCurrentDrink.removeAt(dsCurrentDrink.size - 1) // Remove the loading item
+                dsCurrentDrink.removeAt(dsCurrentDrink.size - 1)
                 var i = 0
                 while (position < totalDrink.size && i < itemCount) {
                     dsCurrentDrink.add(totalDrink[position])
@@ -113,5 +113,6 @@ class DrinkHomeFrg(private val userId: String) : Fragment() {
             adapter.notifyDataSetChanged()
         }
     }
+
 }
 

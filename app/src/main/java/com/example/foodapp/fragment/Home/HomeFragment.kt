@@ -25,14 +25,14 @@ class HomeFragment(private val userId: String) : Fragment() {
 
     private lateinit var binding: FragmentHomeBinding
     private val handler = Handler()
-    private lateinit var imagesList: List<Images>
+    private lateinit var imagesList: List<Images>  // Biến này cần được khởi tạo
     private lateinit var viewPager2Adapter: ViewPager2Adapter
 
     private val runnable = object : Runnable {
         override fun run() {
             val currentItem = binding.viewPager2.currentItem
             binding.viewPager2.currentItem = if (currentItem == imagesList.size - 1) 0 else currentItem + 1
-            handler.postDelayed(this, 3000) // Restart the runnable
+            handler.postDelayed(this, 3000) // Delay 3s cho việc chuyển slide
         }
     }
 
@@ -43,20 +43,20 @@ class HomeFragment(private val userId: String) : Fragment() {
     }
 
     private fun initUI() {
-        // Search Layout Click Listener
+        // Khởi tạo imagesList ở đây
+        imagesList = getListImages()  // Khởi tạo imagesList
+
         binding.layoutSearchView.setOnClickListener {
             val intent = Intent(activity, FindActivity::class.java)
             intent.putExtra("userId", userId)
             startActivity(intent)
         }
 
-        // Set up TabLayout
         binding.tabHome.apply {
             addTab(newTab().setText("Food"))
             addTab(newTab().setText("Drink"))
         }
 
-        // Set up ViewPager2 for tabs
         val fragmentManager = activity?.supportFragmentManager ?: return
         viewPager2Adapter = ViewPager2Adapter(fragmentManager, lifecycle, userId)
         binding.viewpaperHome.adapter = viewPager2Adapter
@@ -76,12 +76,10 @@ class HomeFragment(private val userId: String) : Fragment() {
             }
         })
 
-        // Image list for ViewPager2
-        imagesList = getListImages()
+        // Khởi tạo adapter với imagesList
         val adapter = ImagesViewPageAdapter(imagesList)
         binding.viewPager2.adapter = adapter
 
-        // Linking ViewPager2 with CircleIndicator
         binding.circleIndicator3.setViewPager(binding.viewPager2)
 
         binding.viewPager2.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
@@ -96,6 +94,7 @@ class HomeFragment(private val userId: String) : Fragment() {
     }
 
     private fun getListImages(): List<Images> {
+        // Hàm trả về danh sách hình ảnh
         return listOf(
             Images(R.drawable.bg1),
             Images(R.drawable.bg2),
@@ -106,11 +105,12 @@ class HomeFragment(private val userId: String) : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        handler.removeCallbacks(runnable) // Stop the auto-scroll when fragment is not visible
+        handler.removeCallbacks(runnable)
     }
 
     override fun onResume() {
         super.onResume()
-        handler.postDelayed(runnable, 3000) // Restart auto-scroll when fragment is visible
+        handler.postDelayed(runnable, 3000)
     }
 }
+
