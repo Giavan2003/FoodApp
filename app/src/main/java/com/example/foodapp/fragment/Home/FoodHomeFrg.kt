@@ -15,6 +15,10 @@ import com.example.foodapp.RetrofitClient
 import com.example.foodapp.adapter.Home.FoodDrinkFrgAdapter
 import com.example.foodapp.databinding.FragmentFoodHomeFrgBinding
 import com.example.foodapp.model.Product
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 import retrofit2.Call
 import retrofit2.Callback
@@ -29,10 +33,9 @@ class FoodHomeFrg(private val userId: String = "") : Fragment() {
     private val itemCount = 5
     private var isScrolling = true
     private var lastKey: String? = null
-    private lateinit var apiService: APIService
     private var position = 0
 
-    // Mặc định khi không có userId
+
     constructor() : this("")
 
     override fun onCreateView(
@@ -68,11 +71,20 @@ class FoodHomeFrg(private val userId: String = "") : Fragment() {
 
     private fun initData() {
         dsCurrentFood = mutableListOf()
-        val apiService: APIService = RetrofitClient.retrofit!!.create(APIService::class.java)
-        apiService.getProductsByType("food").enqueue(object : Callback<List<Product>> {
-            override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
-                if (response.isSuccessful) {
-                    totalFood = response.body() ?: emptyList()
+
+        FirebaseDatabase.getInstance().getReference("Products")
+            .orderByChild("productType")
+            .equalTo("Food")  // Filter products with "Food" type
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    totalFood = mutableListOf()
+                    for (item in snapshot.children) {
+                        val product = item.getValue(Product::class.java)
+                        if (product != null) {
+                            totalFood = totalFood + product
+                        }
+                    }
+
                     var i = 0
                     while (position < totalFood.size && i < itemCount) {
                         dsCurrentFood.add(totalFood[position])
@@ -80,15 +92,12 @@ class FoodHomeFrg(private val userId: String = "") : Fragment() {
                         i++
                     }
                     adapter.notifyDataSetChanged()
-                } else {
-                    // Handle failure case if needed
                 }
-            }
 
-            override fun onFailure(call: Call<List<Product>>, t: Throwable) {
-                // Handle failure case if needed
-            }
-        })
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+            })
     }
 
     private fun loadMore() {
