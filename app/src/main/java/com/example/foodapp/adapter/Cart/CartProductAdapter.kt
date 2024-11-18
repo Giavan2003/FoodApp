@@ -1,6 +1,7 @@
 package com.example.foodapp.adapter.Cart
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,22 +14,32 @@ import com.example.foodapp.Interface.APIService
 import com.example.foodapp.Interface.IAdapterItemListener
 import com.example.foodapp.R
 import com.example.foodapp.RetrofitClient
+import com.example.foodapp.activity.ProductInformation.ProductInfoActivity
 import com.example.foodapp.custom.CustomMessageBox.CustomAlertDialog
 import com.example.foodapp.custom.CustomMessageBox.FailToast
 import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast
 import com.example.foodapp.databinding.ItemCartProductBinding
+import com.example.foodapp.helper.FirebaseNotificationHelper
+import com.example.foodapp.helper.FirebaseProductInfoHelper
+import com.example.foodapp.helper.FirebaseUserInfoHelper
+import com.example.foodapp.model.Cart
 import com.example.foodapp.model.CartInfo
 import com.example.foodapp.model.CartProduct
+import com.example.foodapp.model.Notification
+import com.example.foodapp.model.Product
 import com.example.foodapp.model.User
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 
 class CartProductAdapter(
-    private val context: Context,
-    private var cartInfos: List<CartInfo>,
+    private val mContext: Context,
+    private val mCartInfos: List<CartInfo>,
     private val cartId: String,
     private var isCheckAll: Boolean,
     private val userId: String
@@ -36,27 +47,24 @@ class CartProductAdapter(
 
     private val viewBinderHelper = ViewBinderHelper()
     private var checkedItemCount = 0
-    private var checkedItemPrice = 0L
-    private var selectedItems = ArrayList<CartInfo>()
+    private var checkedItemPrice: Long = 0
     private var adapterItemListener: IAdapterItemListener? = null
     private var userName: String? = null
-    private val apiService: APIService =  RetrofitClient.retrofit!!.create(APIService::class.java)
+    private val selectedItems = ArrayList<CartInfo>()
 
     init {
         viewBinderHelper.setOpenOnlyOne(true)
 
-        apiService.getUserByUserId(userId).enqueue(object : Callback<User> {
-            override fun onResponse(call: Call<User>, response: Response<User>) {
-                if (response.isSuccessful) {
-                    userName = response.body()?.userName
-                } else {
-                    Log.d("usernameCartAdapter", "unsuccessfully")
-                }
+        FirebaseUserInfoHelper(mContext).readUserInfo(userId, object : FirebaseUserInfoHelper.DataStatus {
+            override fun dataIsLoaded(user: User?) {
+                userName = user?.userName ?: ""
             }
 
-            override fun onFailure(call: Call<User>, t: Throwable) {
-                Log.d("usernameCartAdapterFailure", t.message ?: "Error")
-            }
+            override fun dataIsInserted() {}
+
+            override fun dataIsUpdated() {}
+
+            override fun dataIsDeleted() {}
         })
     }
 
@@ -66,94 +74,253 @@ class CartProductAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val cartInfo = cartInfos[position]
+        val cartInfo = mCartInfos[position]
+        Log.d("CartProductAdapter", "Cart Info: $cartInfo")
         viewBinderHelper.bind(holder.binding.swipeRevealLayout, cartInfo.cartInfoId)
         holder.binding.checkBox.isChecked = isCheckAll
 
-        apiService.getProductCart(cartInfo.productId!!).enqueue(object : Callback<CartProduct> {
-            override fun onResponse(call: Call<CartProduct>, response: Response<CartProduct>) {
-                if (response.isSuccessful) {
-                    response.body()?.let { cartProduct ->
-                        with(holder.binding) {
-                            productName.text = cartProduct.productName
-                            productPrice.text = "${convertToMoney(cartProduct.productPrice)}đ"
-                            Glide.with(context).load(cartProduct.productImage1).placeholder(R.mipmap.ic_launcher).into(productImage)
-                            productAmount.text = cartInfo.amount.toString()
+        val productId = cartInfo.productId
+        Log.d("Product", "Product Info: $productId")
+        if (!productId.isNullOrEmpty()) {
+            FirebaseDatabase.getInstance().getReference().child("Products").child(productId)
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val product = snapshot.getValue(Product::class.java)
+                        if (product != null) {
+                            // Gán thông tin sản phẩm vào các view
+                            holder.binding.productName.text = product.productName
+                            holder.binding.productPrice.text = (convertToMoney(product.productPrice?.toLong() ?: 0L)) + "đ"
+                            Glide.with(mContext).load(product.productImage1).placeholder(R.mipmap.ic_launcher).into(holder.binding.productImage)
+                            holder.binding.productAmount.text = cartInfo.amount.toString()
                         }
-                        holder.remainAmount = cartProduct.remainAmount
                     }
-                } else {
-                    Log.e("Retrofit", "Response not successful: ${response.code()}")
-                }
-            }
 
-            override fun onFailure(call: Call<CartProduct>, t: Throwable) {
-                Log.e("Retrofit", "API call failed: ${t.message}")
-            }
-        })
+                    override fun onCancelled(error: DatabaseError) {}
+                })
+        } else {
+            Log.e("CartProductAdapter", "Invalid productId: $productId")
+        }
+
+        isLiked(holder.binding.like, cartInfo.productId!!)
 
         holder.binding.add.setOnClickListener {
-            var amount = holder.binding.productAmount.text.toString().toInt()
-            if (amount >= holder.remainAmount) {
-                FailToast(context, "Can't add anymore!").showToast()
-            } else {
-                amount++
-                holder.binding.productAmount.text = amount.toString()
-                holder.binding.checkBox.isChecked = false
-                isCheckAll = false
-                adapterItemListener?.onCheckedItemCountChanged(0, 0, ArrayList())
-                adapterItemListener?.onAddClicked()
+            FirebaseDatabase.getInstance().reference.child("Products")
+                .child(cartInfo.productId!!).child("remainAmount")
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val amount = holder.binding.productAmount.text.toString().toInt()
+                        val remainAmount = snapshot.getValue(Int::class.java) ?: 0
+                        if (amount >= remainAmount) {
+                            FailToast(mContext, "Can't add anymore!").showToast()
+                        } else {
+                            // Change display value
+                            var updatedAmount = amount + 1
+                            holder.binding.productAmount.setText(updatedAmount.toString())
+                            holder.binding.checkBox.isChecked = false
+                            isCheckAll = false
 
-                FirebaseDatabase.getInstance()
-                    .getReference("CartInfos")
-                    .child(cartId)
-                    .child(cartInfo.cartInfoId!!)
-                    .child("amount")
-                    .setValue(amount)
-            }
+                            adapterItemListener?.let {
+                                it.onCheckedItemCountChanged(0, 0, ArrayList())
+                                it.onAddClicked()
+                            }
+
+
+                            FirebaseDatabase.getInstance().reference.child("CartInfo's")
+                                .child(cartId).child(cartInfo.cartInfoId!!)
+                                .child("amount").setValue(updatedAmount)
+
+                            FirebaseDatabase.getInstance().reference.child("Carts")
+                                .child(cartId).addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        val cart = snapshot.getValue(Cart::class.java)
+                                        FirebaseDatabase.getInstance().reference.child("Products")
+                                            .child(cartInfo.productId!!)
+                                            .addListenerForSingleValueEvent(object : ValueEventListener {
+                                                override fun onDataChange(snapshot1: DataSnapshot) {
+                                                    val product = snapshot1.getValue(Product::class.java)
+                                                    val totalAmount = (cart?.totalAmount ?: 0) + 1
+                                                    val totalPrice = (cart?.totalPrice?.toLong() ?: 0L) + (product?.productPrice?.toLong() ?: 0L)
+
+                                                    val map = hashMapOf<String, Any>(
+                                                        "totalAmount" to totalAmount,
+                                                        "totalPrice" to totalPrice
+                                                    )
+                                                    FirebaseDatabase.getInstance().reference.child("Carts")
+                                                        .child(cartId).updateChildren(map)
+                                                }
+
+                                                override fun onCancelled(error: DatabaseError) {}
+                                            })
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {}
+                                })
+
+                            FirebaseDatabase.getInstance().reference.child("Products")
+                                .child(cartInfo.productId!!).child("remainAmount")
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        val updatedRemainAmount = (snapshot.getValue(Int::class.java) ?: 0) - 1
+                                        FirebaseDatabase.getInstance().reference.child("Products")
+                                            .child(cartInfo.productId!!).child("remainAmount")
+                                            .setValue(updatedRemainAmount)
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {}
+                                })
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {}
+                })
         }
 
         holder.binding.subtract.setOnClickListener {
-            var amount = holder.binding.productAmount.text.toString().toInt()
-            if (amount > 1) {
-                amount--
-                holder.binding.productAmount.text = amount.toString()
+            val amount = holder.binding.productAmount.text.toString().toIntOrNull()
+            if (amount != null && amount > 1) {
+                // Change display value
+                var newAmount = amount - 1
+                holder.binding.productAmount.setText(newAmount.toString())
                 isCheckAll = false
-                adapterItemListener?.onCheckedItemCountChanged(0, 0, ArrayList())
-                adapterItemListener?.onSubtractClicked()
 
-                FirebaseDatabase.getInstance()
-                    .getReference("CartInfos")
-                    .child(cartId)
-                    .child(cartInfo.cartInfoId!!)
-                    .child("amount")
-                    .setValue(amount)
+                adapterItemListener?.apply {
+                    onCheckedItemCountChanged(0, 0, ArrayList())
+                    onSubtractClicked()
+                }
+
+                // Save to firebase
+                FirebaseDatabase.getInstance().getReference().child("CartInfo's").child(cartId).child(cartInfo.cartInfoId!!).child("amount")
+                    .setValue(newAmount)
+
+                FirebaseDatabase.getInstance().getReference().child("Carts").child(cartId)
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val cart = snapshot.getValue(Cart::class.java)
+                            FirebaseDatabase.getInstance().getReference().child("Products").child(cartInfo.productId!!)
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot1: DataSnapshot) {
+                                        val product = snapshot1.getValue(Product::class.java)
+                                        val totalAmount = cart?.totalAmount?.minus(1) ?: 0
+                                        val totalPrice = cart?.totalPrice?.minus(product?.productPrice ?: 0) ?: 0L
+
+                                        val map = hashMapOf<String, Any>(
+                                            "totalAmount" to totalAmount,
+                                            "totalPrice" to totalPrice
+                                        )
+                                        FirebaseDatabase.getInstance().getReference().child("Carts").child(cartId).updateChildren(map)
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {}
+                                })
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {}
+                    })
+
+                FirebaseDatabase.getInstance().getReference().child("Products").child(cartInfo.productId!!)
+                    .child("remainAmount")
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val remainAmount = snapshot.getValue(Int::class.java) ?: 0
+                            FirebaseDatabase.getInstance().getReference().child("Products").child(cartInfo.productId!!)
+                                .child("remainAmount").setValue(remainAmount + 1)
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {}
+                    })
             } else {
-                FailToast(context, "Can't reduce anymore!").showToast()
+                FailToast(mContext, "Can't reduce anymore!").showToast()
             }
         }
 
         holder.binding.like.setOnClickListener {
-            handleLikeAction(holder.binding.like, cartInfo)
+            when (holder.binding.like.tag) {
+                "like" -> {
+                    FirebaseDatabase.getInstance().getReference()
+                        .child("Favorites")
+                        .child(userId)
+                        .child(cartInfo.productId!!)
+                        .setValue(true)
+                    pushNotificationFavourite(cartInfo)
+                    SuccessfulToast(mContext, "Added to your favourite list").showToast()
+                }
+                "liked" -> {
+                    FirebaseDatabase.getInstance().getReference()
+                        .child("Favorites")
+                        .child(userId)
+                        .child(cartInfo.productId!!)
+                        .removeValue()
+                    SuccessfulToast(mContext, "Removed from your favourite list").showToast()
+                }
+            }
         }
 
         holder.binding.delete.setOnClickListener {
-            CustomAlertDialog(context, "Delete this product?")
+            CustomAlertDialog(mContext, "Delete this product?")
 
             CustomAlertDialog.binding.btnYes.setOnClickListener {
                 CustomAlertDialog.alertDialog.dismiss()
 
-                FirebaseDatabase.getInstance()
-                    .getReference("CartInfos")
+                FirebaseDatabase.getInstance().getReference()
+                    .child("CartInfo's")
                     .child(cartId)
                     .child(cartInfo.cartInfoId!!)
                     .removeValue()
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
-                            SuccessfulToast(context, "Delete product successfully!").showToast()
+                            SuccessfulToast(mContext, "Delete product successfully!").showToast()
                             adapterItemListener?.onDeleteProduct()
                         }
                     }
+
+                FirebaseDatabase.getInstance().getReference()
+                    .child("Carts")
+                    .child(cartId)
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val cart = snapshot.getValue(Cart::class.java)
+                            FirebaseDatabase.getInstance().getReference()
+                                .child("Products")
+                                .child(cartInfo.productId!!)
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot1: DataSnapshot) {
+                                        val product = snapshot1.getValue(Product::class.java)
+                                        val totalAmount = cart?.totalAmount?.minus(cartInfo.amount) ?: 0
+                                        val totalPrice = cart?.totalPrice?.minus((product?.productPrice ?: 0) * cartInfo.amount) ?: 0L
+
+                                        val map = hashMapOf<String, Any>(
+                                            "totalAmount" to totalAmount,
+                                            "totalPrice" to totalPrice
+                                        )
+                                        FirebaseDatabase.getInstance().getReference()
+                                            .child("Carts")
+                                            .child(cartId)
+                                            .updateChildren(map)
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {}
+                                })
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {}
+                    })
+
+                FirebaseDatabase.getInstance().getReference()
+                    .child("Products")
+                    .child(cartInfo.productId!!)
+                    .child("remainAmount")
+                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            val remainAmount = (snapshot.getValue(Int::class.java) ?: 0) + cartInfo.amount
+                            FirebaseDatabase.getInstance().getReference()
+                                .child("Products")
+                                .child(cartInfo.productId!!)
+                                .child("remainAmount")
+                                .setValue(remainAmount)
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {}
+                    })
             }
 
             CustomAlertDialog.binding.btnNo.setOnClickListener {
@@ -163,46 +330,148 @@ class CartProductAdapter(
             CustomAlertDialog.showAlertDialog()
         }
 
+        holder.binding.itemContainer.setOnClickListener {
+            FirebaseDatabase.getInstance().reference.child("Products").child(cartInfo.productId!!).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val product = snapshot.getValue(Product::class.java)
+                    product?.let {
+                        val intent = Intent(mContext, ProductInfoActivity::class.java).apply {
+                            putExtra("productId", it.productId)
+                            putExtra("productName", it.productName)
+                            putExtra("productPrice", it.productPrice)
+                            putExtra("productImage1", it.productImage1)
+                            putExtra("productImage2", it.productImage2)
+                            putExtra("productImage3", it.productImage3)
+                            putExtra("productImage4", it.productImage4)
+                            putExtra("ratingStar", it.ratingStar)
+                            putExtra("productDescription", it.description)
+                            putExtra("publisherId", it.publisherId)
+                            putExtra("sold", it.sold)
+                            putExtra("productType", it.productType)
+                            putExtra("remainAmount", it.remainAmount)
+                            putExtra("ratingAmount", it.ratingAmount)
+                            putExtra("state", it.state)
+                            putExtra("userId", userId)
+                            putExtra("userName", userName)
+                        }
+                        mContext.startActivity(intent)
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    // Handle cancellation if needed
+                }
+            })
+        }
+
+        holder.binding.checkBox.setOnCheckedChangeListener { compoundButton, isChecked ->
+            FirebaseDatabase.getInstance().reference.child("Products").child(cartInfo.productId!!).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val product = snapshot.getValue(Product::class.java)
+                    if (product != null) {
+                        if (isChecked) {
+                            checkedItemCount += cartInfo.amount
+                            checkedItemPrice += cartInfo.amount * product.productPrice
+                            selectedItems.add(cartInfo)
+                        } else {
+                            checkedItemCount -= cartInfo.amount
+                            checkedItemPrice -= cartInfo.amount * product.productPrice
+                            selectedItems.removeIf { c -> c.cartInfoId == cartInfo.cartInfoId }
+                        }
+
+                        adapterItemListener?.onCheckedItemCountChanged(checkedItemCount, checkedItemPrice, ArrayList(selectedItems))
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    // Handle cancellation if necessary
+                }
+            })
+        }
+
     }
 
-    override fun getItemCount(): Int = cartInfos.size
-    fun saveStates(outState: Bundle?) {
-        viewBinderHelper.saveStates(outState)
-    }
+    private fun isLiked(imageButton: ImageButton, productId: String) {
+        FirebaseDatabase.getInstance().getReference().child("Favorites").child(userId)
+            .addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.child(productId).exists()) {
+                        imageButton.setImageResource(R.drawable.ic_liked)
+                        imageButton.tag = "liked"
+                    } else {
+                        imageButton.setImageResource(R.drawable.ic_like)
+                        imageButton.tag = "like"
+                    }
+                }
 
-    fun setAdapterItemListener(listener: IAdapterItemListener) {
-        this.adapterItemListener = listener
-    }
-    fun restoreStates(instate: Bundle?) {
-        viewBinderHelper.restoreStates(instate)
+                override fun onCancelled(error: DatabaseError) {}
+            })
     }
 
     private fun convertToMoney(price: Long): String {
-        return price.toString().reversed().chunked(3).joinToString(",").reversed()
-    }
-
-    private fun handleLikeAction(likeButton: ImageButton, cartInfo: CartInfo) {
-        val favoritesRef = FirebaseDatabase.getInstance().getReference("Favorites").child(userId)
-        if (likeButton.tag == "like") {
-            favoritesRef.child(cartInfo.productId!!).setValue(true).addOnCompleteListener {
-                if (it.isSuccessful) {
-                    SuccessfulToast(context, "Added to your favourite list").showToast()
-                    likeButton.setImageResource(R.drawable.ic_liked)
-                    likeButton.tag = "liked"
-                }
-            }
-        } else if (likeButton.tag == "liked") {
-            favoritesRef.child(cartInfo.productId!!).removeValue().addOnCompleteListener {
-                if (it.isSuccessful) {
-                    SuccessfulToast(context, "Removed from your favourite list").showToast()
-                    likeButton.setImageResource(R.drawable.ic_like)
-                    likeButton.tag = "like"
-                }
+        val temp = price.toString()
+        var output = ""
+        var count = 3
+        for (i in temp.length - 1 downTo 0) {
+            count--
+            if (count == 0) {
+                count = 3
+                output = "," + temp[i] + output
+            } else {
+                output = temp[i] + output
             }
         }
+
+        return if (output[0] == ',') output.substring(1) else output
     }
 
-    inner class ViewHolder(val binding: ItemCartProductBinding) : RecyclerView.ViewHolder(binding.root) {
-        var remainAmount: Int = 0
+    override fun getItemCount(): Int {
+        return mCartInfos.size
+    }
+
+    fun saveStates(outState: Bundle) {
+        viewBinderHelper.saveStates(outState)
+    }
+
+    fun setAdapterItemListener(adapterItemListener: IAdapterItemListener) {
+        this.adapterItemListener = adapterItemListener
+    }
+
+    fun restoreStates(instate: Bundle) {
+        viewBinderHelper.restoreStates(instate)
+    }
+
+    class ViewHolder(val binding: ItemCartProductBinding) : RecyclerView.ViewHolder(binding.root)
+
+    fun pushNotificationFavourite(cartInfo: CartInfo) {
+        FirebaseProductInfoHelper(cartInfo.productId!!).readInformationById(object : FirebaseProductInfoHelper.DataStatusInformationOfProduct {
+            override fun DataIsLoaded(product: Product?) {
+                val title = "Favourite product"
+                val content = "$userName liked your product: ${product?.productName}. Go to Product Information to check it."
+                val notification = FirebaseNotificationHelper.createNotification(
+                    title, content, product?.productImage1 ?: "", product?.productId ?: "", "None", "None", null
+                )
+
+                FirebaseNotificationHelper(mContext).addNotification(product?.publisherId ?: "", notification, object : FirebaseNotificationHelper.DataStatus {
+                    override fun DataIsLoaded(notificationList: List<Notification>, notificationListToNotify: List<Notification>) {}
+
+                    override fun DataIsInserted() {}
+
+                    override fun DataIsUpdated() {}
+
+                    override fun DataIsDeleted() {}
+                })
+            }
+
+            override fun DataIsInserted() {}
+
+            override fun DataIsUpdated() {}
+
+            override fun DataIsDeleted() {}
+        })
+
+
+
     }
 }
+

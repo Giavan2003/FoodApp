@@ -110,26 +110,26 @@ class ChangeAddressActivity : AppCompatActivity() {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     addressList.clear()
 
-                    // Duyệt qua tất cả các địa chỉ trong snapshot
+
                     snapshot.children.forEach { ds ->
                         val address = ds.getValue(Address::class.java)
                         if (address != null) {
-                            // Nếu addressId bằng choseAddressId thì thêm vào đầu list
+
                             if (address.addressId == GlobalConfig.choseAddressId) {
-                                addressList.add(0, address) // Thêm vào đầu danh sách
+                                addressList.add(0, address)
                             } else {
-                                // Các địa chỉ khác thêm vào cuối danh sách
+
                                 addressList.add(address)
                             }
                         }
                     }
 
-                    // Cập nhật adapter sau khi thay đổi danh sách
+
                     addressAdapter.notifyDataSetChanged()
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    // Xử lý lỗi nếu có
+
                 }
             })
     }

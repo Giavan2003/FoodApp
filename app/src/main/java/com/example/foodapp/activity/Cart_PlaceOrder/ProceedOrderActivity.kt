@@ -137,7 +137,7 @@ class ProceedOrderActivity : AppCompatActivity() {
     }
 
     private fun handleCompleteOrder() {
-        // Implement your order completion logic here
+
     }
 
     private fun pushNotificationCartCompleteForSeller(bill: Bill) {

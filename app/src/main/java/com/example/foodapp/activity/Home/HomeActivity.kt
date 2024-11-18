@@ -1,8 +1,13 @@
 package com.example.foodapp.activity.Home
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -10,22 +15,37 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
 import com.example.foodapp.R
 import com.example.foodapp.activity.Cart_PlaceOrder.CartActivity
+import com.example.foodapp.activity.Cart_PlaceOrder.EmptyCartActivity
 import com.example.foodapp.activity.MyShop.MyShopActivity
+import com.example.foodapp.activity.ProductInformation.ProductInfoActivity
 import com.example.foodapp.activity.order.OrderActivity
+import com.example.foodapp.activity.order.OrderDetailActivity
+import com.example.foodapp.activity.orderSellerManagement.DeliveryManagementActivity
 import com.example.foodapp.custom.CustomMessageBox.CustomAlertDialog
 import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast
 import com.example.foodapp.databinding.ActivityHomeBinding
 import com.example.foodapp.fragment.Home.FavoriteFragment
 import com.example.foodapp.fragment.Home.HomeFragment
 import com.example.foodapp.fragment.NotificationFragment
+import com.example.foodapp.helper.FirebaseNotificationHelper
+import com.example.foodapp.helper.FirebaseProductInfoHelper
+import com.example.foodapp.helper.FirebaseUserInfoHelper
+import com.example.foodapp.model.Bill
 import com.example.foodapp.model.Cart
+import com.example.foodapp.model.Notification
+import com.example.foodapp.model.Product
+import com.example.foodapp.model.User
+import com.google.android.material.imageview.ShapeableImageView
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -50,11 +70,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Lấy userId từ Firebase Auth
+
         userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
-        // In userId ra console
-        Log.d("aaaaaaaaaaaaaaaaaaaaaaa", "User ID: $userId")
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermission(Manifest.permission.POST_NOTIFICATIONS, 101)
@@ -86,44 +104,57 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         binding.toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
                 R.id.message_menu -> {
-                    val intent = Intent(this@HomeActivity, ChatActivity::class.java)
-                    intent.putExtra("userId", userId)
+                    val intent = Intent(this@HomeActivity, ChatActivity::class.java).apply {
+                        putExtra("userId", userId)
+                    }
                     startActivity(intent)
+                    true
                 }
                 R.id.cart_menu -> {
+                    FirebaseDatabase.getInstance().reference.child("Carts").addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            var isCartFound = false
+                            for (ds in snapshot.children) {
+                                val cart = ds.getValue(Cart::class.java)
+                                //Log.d("CartDebug", "cartId: ${cart?.cartId}")
+                                //Log.d("CartDebug", "userId: $userId")
+                                if (!cart?.cartId.isNullOrEmpty()) {
+                                    FirebaseDatabase.getInstance().reference.child("CartInfo's").child(cart?.cartId!!)
+                                        .addListenerForSingleValueEvent(object : ValueEventListener {
+                                            override fun onDataChange(snapshot: DataSnapshot) {
+                                                //Log.d("CartDebug", "so san pham: ${snapshot.childrenCount}")
+                                                if (snapshot.exists() && snapshot.childrenCount == 0L) {
+                                                    startActivity(Intent(this@HomeActivity, EmptyCartActivity::class.java))
+                                                } else {
+                                                    val intent = Intent(this@HomeActivity, CartActivity::class.java).apply {
+                                                        putExtra("userId", userId)
+                                                    }
+                                                    startActivity(intent)
+                                                }
+                                            }
 
-                    FirebaseDatabase.getInstance().reference.child("Carts")
-                        .addListenerForSingleValueEvent(object : ValueEventListener {
-                            override fun onDataChange(snapshot: DataSnapshot) {
-                                var cartFound = false
-                                snapshot.children.forEach { ds ->
-                                    val cart = ds.getValue(Cart::class.java)
-                                    if (cart?.userId == userId) {
-                                        cartFound = true
-                                        val cartId = ds.key ?: "" // Lấy cartId từ key của dữ liệu
-                                        Log.d("HomeActivity", "Cart ID: $cartId") // In cartId ra console
-                                        // Mở CartActivity và truyền userId, cartId vào
-                                        val intent = Intent(this@HomeActivity, CartActivity::class.java).apply {
-                                            putExtra("userId", userId)
-                                            putExtra("cartId", cartId) // Gửi cartId vào Intent
-                                        }
-                                        startActivity(intent)
-                                    }
-                                }
-                                if (!cartFound) {
-                                    // Nếu không tìm thấy giỏ hàng, không làm gì (bỏ EmptyCartActivity)
-                                    Log.d("HomeActivity", "No cart found for user: $userId")
+                                            override fun onCancelled(error: DatabaseError) {
+                                                Log.e("CartError", "Lỗi khi tải CartInfos: ${error.message}")
+                                            }
+                                        })
+                                    isCartFound = true
+                                    break
                                 }
                             }
-
-                            override fun onCancelled(error: DatabaseError) {
-                                // Xử lý lỗi nếu cần
-                                Log.e("HomeActivity", "Firebase error: ${error.message}")
+                            if (!isCartFound) {
+                                startActivity(Intent(this@HomeActivity, EmptyCartActivity::class.java))
                             }
-                        })
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {
+                            Log.e("CartError", "Lỗi khi tải Carts: ${error.message}")
+                        }
+                    })
+                    true
                 }
+
+                else -> true
             }
-            true
         }
     }
 
@@ -235,7 +266,203 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
-    private fun loadInformationForNavigationBar() {
-        // Phương thức này có thể được sử dụng để tải thêm thông tin cần thiết cho thanh điều hướng
+    fun loadInformationForNavigationBar() {
+
+        FirebaseNotificationHelper(this).readNotification(userId, object : FirebaseNotificationHelper.DataStatus {
+            override fun DataIsLoaded(notificationList: List<Notification>, notificationListToNotify: List<Notification>) {
+                var count = 0
+                for (i in notificationList.indices) {
+                    if (!notificationList[i].isRead) {
+                        count++
+                    }
+                }
+                if (count > 0) {
+                    binding.bottomNavigation.setCount(3, count.toString())
+                } else if (count == 0) {
+                    binding.bottomNavigation.clearCount(3)
+                }
+
+                for (notification in notificationListToNotify) {
+                    makeNotification(notification)
+                }
+            }
+
+            override fun DataIsInserted() {}
+
+            override fun DataIsUpdated() {}
+
+            override fun DataIsDeleted() {}
+        })
+
+        FirebaseUserInfoHelper(this).readUserInfo(userId, object : FirebaseUserInfoHelper.DataStatus {
+            override fun dataIsLoaded(user: User?) {
+                val headerView = binding.navigationLeft.getHeaderView(0)
+                val imgAvatarInNavigationBar: ShapeableImageView = headerView.findViewById(R.id.imgAvatarInNavigationBar)
+                val txtNameInNavigationBar: TextView = headerView.findViewById(R.id.txtNameInNavigationBar)
+                txtNameInNavigationBar.text = "Hi, ${getLastName(user?.userName ?: "")}"
+                Glide.with(this@HomeActivity).load(user?.avatarURL).placeholder(R.drawable.default_avatar).into(imgAvatarInNavigationBar)
+            }
+
+            override fun dataIsInserted() {
+            }
+
+            override fun dataIsUpdated() {
+            }
+
+            override fun dataIsDeleted(){
+            }
+        })
     }
+
+    private fun getLastName(userName: String): String {
+        val trimmedName = userName.trim()
+        val output = trimmedName.split(" ")
+        return output.last()
+    }
+
+    private fun makeNotification(notification: Notification) {
+        val channelId = "CHANNEL_ID_NOTIFICATION"
+        val builder = NotificationCompat.Builder(applicationContext, channelId)
+        val largeIcon = BitmapFactory.decodeResource(applicationContext.resources, R.drawable.bkg)
+        builder.setSmallIcon(R.drawable.bkg)
+            .setContentTitle("Food services")
+            .setContentText(notification.title)
+            .setStyle(NotificationCompat.BigTextStyle().setBigContentTitle(notification.title).bigText(notification.content))
+            .setLargeIcon(largeIcon)
+            .setColor(Color.RED)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+
+        if (notification.billId != "None") {
+            val bill = Bill().apply { billId = notification.billId }
+            val intent = Intent(applicationContext, OrderDetailActivity::class.java).apply {
+                putExtra("Bill", bill)
+                putExtra("userId", userId)
+                putExtra("notification", notification)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+
+            val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE)
+            builder.setContentIntent(pendingIntent)
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                var notificationChannel = notificationManager.getNotificationChannel(channelId)
+                if (notificationChannel == null) {
+                    notificationChannel = NotificationChannel(channelId, "Some description", NotificationManager.IMPORTANCE_HIGH).apply {
+                        lightColor = Color.GREEN
+                        enableVibration(true)
+                    }
+                    notificationManager.createNotificationChannel(notificationChannel)
+                }
+            }
+
+            notificationManager.notify(0, builder.build())
+        } else if (notification.productId != "None") {
+            val userName = arrayOfNulls<String>(1)
+            FirebaseDatabase.getInstance().getReference().child("Users").child(userId).addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    userName[0] = snapshot.child("userName").getValue(String::class.java)
+                }
+
+                override fun onCancelled(error: DatabaseError) {}
+            })
+            FirebaseProductInfoHelper(notification.productId!!).readInformationById(object : FirebaseProductInfoHelper.DataStatusInformationOfProduct {
+                override fun DataIsLoaded(product: Product?) {
+                    val intent = Intent(applicationContext, ProductInfoActivity::class.java).apply {
+                        putExtra("productId", product?.productId)
+                        putExtra("productName", product?.productName)
+                        putExtra("productPrice", product?.productPrice)
+                        putExtra("productImage1", product?.productImage1)
+                        putExtra("productImage2", product?.productImage2)
+                        putExtra("productImage3", product?.productImage3)
+                        putExtra("productImage4", product?.productImage4)
+                        putExtra("ratingStar", product?.ratingStar)
+                        putExtra("productDescription", product?.description)
+                        putExtra("publisherId", product?.publisherId)
+                        putExtra("sold", product?.sold)
+                        putExtra("productType", product?.productType)
+                        putExtra("remainAmount", product?.remainAmount)
+                        putExtra("ratingAmount", product?.ratingAmount)
+                        putExtra("state", product?.state)
+                        putExtra("userId", userId)
+                        putExtra("userName", userName)
+                        putExtra("notification", notification)
+                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    }
+                    startActivity(intent)
+
+                    val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE)
+                    builder.setContentIntent(pendingIntent)
+                    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        var notificationChannel = notificationManager.getNotificationChannel(channelId)
+                        if (notificationChannel == null) {
+                            notificationChannel = NotificationChannel(channelId, "Some description", NotificationManager.IMPORTANCE_HIGH).apply {
+                                lightColor = Color.GREEN
+                                enableVibration(true)
+                            }
+                            notificationManager.createNotificationChannel(notificationChannel)
+                        }
+                    }
+
+                    notificationManager.notify(0, builder.build())
+                }
+
+                override fun DataIsInserted() {}
+
+                override fun DataIsUpdated() {}
+
+                override fun DataIsDeleted() {}
+            })
+
+        } else if (notification.confirmId != "None") {
+            val intent = Intent(applicationContext, DeliveryManagementActivity::class.java).apply {
+                putExtra("userId", userId)
+                putExtra("notification", notification)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+
+            val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE)
+            builder.setContentIntent(pendingIntent)
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                var notificationChannel = notificationManager.getNotificationChannel(channelId)
+                if (notificationChannel == null) {
+                    notificationChannel = NotificationChannel(channelId, "Some description", NotificationManager.IMPORTANCE_HIGH).apply {
+                        lightColor = Color.GREEN
+                        enableVibration(true)
+                    }
+                    notificationManager.createNotificationChannel(notificationChannel)
+                }
+            }
+
+            notificationManager.notify(0, builder.build())
+        } else if (notification.publisher != null) {
+            val intent = Intent(applicationContext, ChatDetailActivity::class.java).apply {
+                action = "homeActivity"
+                putExtra("notification", notification)
+                putExtra("publisher", notification.publisher)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                var notificationChannel = notificationManager.getNotificationChannel(channelId)
+                if (notificationChannel == null) {
+                    notificationChannel = NotificationChannel(channelId, "Some description", NotificationManager.IMPORTANCE_HIGH).apply {
+                        lightColor = Color.GREEN
+                        enableVibration(true)
+                    }
+                    notificationManager.createNotificationChannel(notificationChannel)
+                }
+            }
+
+            notificationManager.notify(0, builder.build())
+        }
+    }
+
 }
