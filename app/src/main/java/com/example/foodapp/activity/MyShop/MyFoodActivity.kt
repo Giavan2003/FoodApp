@@ -33,7 +33,7 @@ class MyFoodActivity : AppCompatActivity() {
         window.navigationBarColor = Color.parseColor("#E8584D")
 
         userId = intent.getStringExtra("userId").toString()
-
+        Log.d("id",userId)
         adapter = MyFoodAdapter(ds, this, userId)
         binding.recycleView.setHasFixedSize(true)
         binding.recycleView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
@@ -63,6 +63,7 @@ class MyFoodActivity : AppCompatActivity() {
                         if (tmp != null && tmp.publisherId != null) {
                             if (tmp.publisherId == userId && tmp.state != "deleted") {
                                 ds.add(tmp)
+                                Log.d("proid",tmp.productId.toString())
                             }
                         }
                     }

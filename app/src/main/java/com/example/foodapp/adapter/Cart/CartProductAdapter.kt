@@ -10,10 +10,8 @@ import android.widget.ImageButton
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.chauthai.swipereveallayout.ViewBinderHelper
-import com.example.foodapp.Interface.APIService
 import com.example.foodapp.Interface.IAdapterItemListener
 import com.example.foodapp.R
-import com.example.foodapp.RetrofitClient
 import com.example.foodapp.activity.ProductInformation.ProductInfoActivity
 import com.example.foodapp.custom.CustomMessageBox.CustomAlertDialog
 import com.example.foodapp.custom.CustomMessageBox.FailToast
@@ -24,7 +22,6 @@ import com.example.foodapp.helper.FirebaseProductInfoHelper
 import com.example.foodapp.helper.FirebaseUserInfoHelper
 import com.example.foodapp.model.Cart
 import com.example.foodapp.model.CartInfo
-import com.example.foodapp.model.CartProduct
 import com.example.foodapp.model.Notification
 import com.example.foodapp.model.Product
 import com.example.foodapp.model.User
@@ -32,9 +29,6 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 
 class CartProductAdapter(

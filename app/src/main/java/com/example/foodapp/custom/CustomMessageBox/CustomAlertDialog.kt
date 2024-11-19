@@ -17,6 +17,13 @@ class CustomAlertDialog(mContext: Context, content: String) {
         fun showAlertDialog() {
             alertDialog.show()
         }
+        fun dismiss() {
+            if (::alertDialog.isInitialized) {
+                alertDialog.dismiss()
+            } else {
+
+            }
+        }
     }
 
     init {

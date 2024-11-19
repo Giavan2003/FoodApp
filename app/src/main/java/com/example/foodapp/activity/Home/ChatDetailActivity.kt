@@ -2,10 +2,13 @@ package com.example.foodapp.activity.Home
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.example.foodapp.R
@@ -19,15 +22,14 @@ import com.example.foodapp.model.User
 
 class ChatDetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChatDetailBinding
-    private lateinit var publisherId: String
+    private var publisherId: String? = null
     private val publisher = MutableLiveData<User>()
     private val messages = ArrayList<Message>()
     private lateinit var userId: String
     private lateinit var uploadDialog: LoadingDialog
     private lateinit var chatDetailAdapter: ChatDetailAdapter
-    private val messageReference: DatabaseReference = FirebaseDatabase.getInstance().getReference("Message")
-    private lateinit var messageListener: ChildEventListener
-    private lateinit var notification: Notification
+    private val messageReference = FirebaseDatabase.getInstance().getReference("Message")
+    private var messageListener: ChildEventListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,17 +45,17 @@ class ChatDetailActivity : AppCompatActivity() {
     private fun registerListenerForMessage() {
         messageListener = object : ChildEventListener {
             override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
-                val message = snapshot.getValue(Message::class.java)
-                if (message != null && message.senderId != userId) {
+                val message = snapshot.getValue(Message::class.java) ?: return
+                if (message.senderId != userId) {
                     val messageReferenceOfSender =
                         message.idMessage?.let {
-                            messageReference.child(userId).child(publisherId).child(
+                            messageReference.child(userId).child(publisherId!!).child(
                                 it
                             ).child("seen")
                         }
                     val messageReferenceOfReceiver =
                         message.idMessage?.let {
-                            messageReference.child(publisherId).child(userId).child(
+                            messageReference.child(publisherId!!).child(userId).child(
                                 it
                             ).child("seen")
                         }
@@ -64,18 +66,21 @@ class ChatDetailActivity : AppCompatActivity() {
                         setMessageSeen(messageReferenceOfReceiver)
                     }
                 }
-                messages.add(message!!)
+                messages.add(message)
                 chatDetailAdapter.notifyItemInserted(messages.size - 1)
                 binding.recycleViewMessage.scrollToPosition(chatDetailAdapter.itemCount - 1)
             }
 
             override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
-                val newMessage = snapshot.getValue(Message::class.java)
-                val messageKey = snapshot.key
+                val newMessage = snapshot.getValue(Message::class.java) ?: return
+                val messageKey = snapshot.key ?: return
 
-                messages.indexOfFirst { it.idMessage == messageKey }.takeIf { it != -1 }?.let { index ->
-                    messages[index] = newMessage!!
-                    chatDetailAdapter.notifyItemChanged(index)
+                for (i in messages.indices) {
+                    if (messages[i].idMessage == messageKey) {
+                        messages[i] = newMessage
+                        chatDetailAdapter.notifyItemChanged(i)
+                        break
+                    }
                 }
             }
 
@@ -92,14 +97,17 @@ class ChatDetailActivity : AppCompatActivity() {
     }
 
     private fun createAdapter() {
-        chatDetailAdapter = ChatDetailAdapter(this, messages, userId, publisherId)
+        chatDetailAdapter = ChatDetailAdapter(this, messages, userId, publisherId!!)
     }
 
     private fun loadDataIntoUI() {
-        publisher.value?.let {
-            Glide.with(this).load(it.avatarURL).placeholder(R.drawable.default_avatar).error(R.drawable.image_default).into(binding.imgPublisher)
-            binding.txtNamePublisher.text = it.userName
-        }
+        val currentPublisher = publisher.value ?: return
+        Glide.with(this)
+            .load(currentPublisher.avatarURL)
+            .placeholder(R.drawable.default_avatar)
+            .error(R.drawable.image_default)
+            .into(binding.imgPublisher)
+        binding.txtNamePublisher.text = currentPublisher.userName
         binding.recycleViewMessage.layoutManager = LinearLayoutManager(this)
         binding.recycleViewMessage.adapter = chatDetailAdapter
     }
@@ -112,55 +120,63 @@ class ChatDetailActivity : AppCompatActivity() {
     private fun setSendMessageEvent() {
         binding.btnSend.setOnClickListener {
             val message = binding.edtMessage.text.toString().trim()
-            if (message.isNotEmpty()) {
-                sendMessage(message)
-            }
+            sendMessage(message)
         }
     }
 
     private fun sendMessage(message: String) {
-        val newMessage = Message(message, userId, System.currentTimeMillis(), false)
-        loadMessageToFirebase(newMessage)
+        if (message.isNotEmpty()) {
+            val newMessage = Message(message, userId, System.currentTimeMillis(), false)
+            loadMessageToFirebase(newMessage)
+        }
     }
 
     private fun loadMessageToFirebase(newMessage: Message) {
-        val userMessageReference = messageReference.child(userId).child(publisherId).push()
-        newMessage.idMessage = userMessageReference.key ?: ""
+        val userMessageReference = messageReference.child(userId).child(publisherId!!).push()
+        newMessage.idMessage = userMessageReference.key
         userMessageReference.setValue(newMessage).addOnSuccessListener {
-            messageReference.child(publisherId).child(userId).child(newMessage.idMessage!!).setValue(newMessage)
+            newMessage.idMessage?.let { it1 ->
+                messageReference.child(publisherId!!).child(userId).child(
+                    it1
+                ).setValue(newMessage)
+            }
             binding.edtMessage.setText("")
             pushSendMessageNotification()
         }
     }
 
     private fun pushSendMessageNotification() {
-        FirebaseDatabase.getInstance().getReference("Users").child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val sender = snapshot.getValue(User::class.java)
-                sender?.let {
+        FirebaseDatabase.getInstance().getReference("Users").child(userId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val sender = snapshot.getValue(User::class.java) ?: return
                     val title = "New message"
-                    val content = "${it.userName} sent you a new message. Please check it!"
-                    val notification = if (it.avatarURL?.isNotEmpty() == true) {
-                        it.avatarURL?.let { it1 ->
-                            FirebaseNotificationHelper.createNotification(title, content,
-                                it1, "None", "None", "None", it)
+                    val content = "${sender.userName} sent you a new message. Please check it!"
+                    val notification = if (sender.avatarURL?.isNotEmpty() == true) {
+                        sender.avatarURL?.let {
+                            FirebaseNotificationHelper.createNotification(
+                                title, content, it, "None", "None", "None", sender
+                            )
                         }
                     } else {
-                        FirebaseNotificationHelper.createNotification(title, content, "https://t4.ftcdn.net/jpg/01/18/03/35/360_F_118033506_uMrhnrjBWBxVE9sYGTgBht8S5liVnIeY.jpg", "None", "None", "None", it)
+                        FirebaseNotificationHelper.createNotification(
+                            title, content, "https://t4.ftcdn.net/jpg/01/18/03/35/360_F_118033506_uMrhnrjBWBxVE9sYGTgBht8S5liVnIeY.jpg",
+                            "None", "None", "None", sender
+                        )
                     }
                     if (notification != null) {
-                        FirebaseNotificationHelper(this@ChatDetailActivity).addNotification(publisherId, notification, object : FirebaseNotificationHelper.DataStatus {
-                            override fun DataIsLoaded(notificationList: List<Notification>, notificationListToNotify: List<Notification>) {}
-                            override fun DataIsInserted() {}
-                            override fun DataIsUpdated() {}
-                            override fun DataIsDeleted() {}
-                        })
+                        FirebaseNotificationHelper(this@ChatDetailActivity)
+                            .addNotification(publisherId!!, notification, object : FirebaseNotificationHelper.DataStatus {
+                                override fun DataIsLoaded(notificationList: List<Notification>, notificationListToNotify: List<Notification>) {}
+                                override fun DataIsInserted() {}
+                                override fun DataIsUpdated() {}
+                                override fun DataIsDeleted() {}
+                            })
                     }
                 }
-            }
 
-            override fun onCancelled(error: DatabaseError) {}
-        })
+                override fun onCancelled(error: DatabaseError) {}
+            })
     }
 
     private fun setBackEvent() {
@@ -182,11 +198,11 @@ class ChatDetailActivity : AppCompatActivity() {
     }
 
     private fun registerForObserver() {
-        publisher.observe(this) { user ->
-            user?.let {
+        publisher.observe(this, Observer {
+            if (it != null) {
                 handleChangedObserver()
             }
-        }
+        })
     }
 
     private fun handleChangedObserver() {
@@ -201,7 +217,8 @@ class ChatDetailActivity : AppCompatActivity() {
     }
 
     private fun loadMessage() {
-        messageReference.child(userId).child(publisherId).addChildEventListener(messageListener)
+        FirebaseDatabase.getInstance().getReference("Message").child(userId).child(publisherId!!)
+            .addChildEventListener(messageListener!!)
     }
 
     private fun setMessageSeen(reference: DatabaseReference) {
@@ -218,38 +235,35 @@ class ChatDetailActivity : AppCompatActivity() {
     }
 
     private fun handleIntentFromHomeActivity(intent: Intent) {
-        val user = intent.getSerializableExtra("publisher") as? User
-        user?.let {
-            publisherId = it.userId.toString()
-            notifyToObserver(publisher, it)
-        }
+        val user = intent.getSerializableExtra("publisher") as User
+        publisherId = user.userId
+        notifyToObserver(publisher, user)
     }
 
     private fun handleIntentFromProductInfoActivity(intent: Intent) {
-        publisherId = intent.getStringExtra("publisherId") ?: ""
-        initPublisher(publisherId)
+        publisherId = intent.getStringExtra("publisherId")
+        initPublisher(publisherId!!)
     }
 
     private fun handleIntentFromChatActivity(intent: Intent) {
-        val publisherTemp = intent.getSerializableExtra("publisher") as? User
-        publisherTemp?.let {
-            publisherId = it.userId.toString()
-            notifyToObserver(publisher, it)
-        }
+        val publisherTemp = intent.getSerializableExtra("publisher") as User
+        publisherId = publisherTemp.userId
+        notifyToObserver(publisher, publisherTemp)
     }
 
-    private fun notifyToObserver(mutableLiveData: MutableLiveData<User>, user: User) {
-        mutableLiveData.postValue(user)
+    private fun notifyToObserver(mutableLiveData: MutableLiveData<User>, obj: User) {
+        mutableLiveData.postValue(obj)
     }
 
     private fun initPublisher(publisherId: String) {
-        FirebaseDatabase.getInstance().getReference("Users").child(publisherId).addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                publisher.postValue(snapshot.getValue(User::class.java))
-            }
+        FirebaseDatabase.getInstance().getReference("Users").child(publisherId)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    publisher.postValue(snapshot.getValue(User::class.java))
+                }
 
-            override fun onCancelled(error: DatabaseError) {}
-        })
+                override fun onCancelled(error: DatabaseError) {}
+            })
     }
 
     private fun isFromChatActivity(action: String?) = action.equals("chatActivity", ignoreCase = true)

@@ -60,11 +60,18 @@ class LoginFragment : Fragment() {
                                     .child(userId)
                                     .addListenerForSingleValueEvent(object : ValueEventListener {
                                         override fun onDataChange(snapshot: DataSnapshot) {
-                                            SuccessfulToast(requireContext(), "Login successfully!").showToast()
-                                            val intent = Intent(requireContext(), HomeActivity::class.java)
-                                            intent.putExtra("userId", userId)
-                                            startActivity(intent)
-                                            requireActivity().finish()
+                                            val isActive = snapshot.child("active").getValue(Boolean::class.java)
+                                            if (isActive == true){
+                                                SuccessfulToast(requireContext(), "Login successfully!").showToast()
+                                                val intent = Intent(requireContext(), HomeActivity::class.java)
+                                                intent.putExtra("userId", userId)
+                                                startActivity(intent)
+                                                requireActivity().finish()
+                                            }
+                                            else {
+                                                FailToast(requireContext(), "Account blocked!").showToast()
+                                                FirebaseAuth.getInstance().signOut()
+                                            }
                                         }
 
                                         override fun onCancelled(error: DatabaseError) {

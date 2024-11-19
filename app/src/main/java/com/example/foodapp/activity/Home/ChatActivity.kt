@@ -1,6 +1,7 @@
 package com.example.foodapp.activity.Home
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.SearchView
 import android.widget.Toast
@@ -15,6 +16,7 @@ import com.example.foodapp.databinding.ActivityChatBinding
 import com.example.foodapp.model.ItemChatRoom
 import com.example.foodapp.model.Message
 import com.example.foodapp.model.User
+import java.util.concurrent.atomic.AtomicInteger
 
 class ChatActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChatBinding
@@ -31,8 +33,8 @@ class ChatActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         userId = intent.getStringExtra("userId") ?: ""
+
         initToolbar()
         initUI()
         initFilterForSearchView()
@@ -48,9 +50,7 @@ class ChatActivity : AppCompatActivity() {
             title = "Messages"
             setDisplayHomeAsUpEnabled(true)
         }
-        binding.toolbar.setNavigationOnClickListener {
-            finish()
-        }
+        binding.toolbar.setNavigationOnClickListener { finish() }
     }
 
     private fun initFilterForSearchView() {
@@ -73,7 +73,7 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun createObserverOfItemChatRoom() {
-        bunchOfItemChatRoomLive.observe(this) {
+        bunchOfItemChatRoomLive.observe(this) { chatRooms ->
             chatAdapter.notifyDataSetChanged()
         }
     }
@@ -81,25 +81,26 @@ class ChatActivity : AppCompatActivity() {
     private fun initUI() {
         chatAdapter = ChatAdapter(this, bunchOfItemChatRoom)
         binding.recycleViewMessage.apply {
-            layoutManager = LinearLayoutManager(this@ChatActivity, RecyclerView.VERTICAL, false)
+            layoutManager = LinearLayoutManager(this@ChatActivity)
             adapter = chatAdapter
         }
     }
 
     private fun createObserverOfReceiverId() {
         bunchOfReceiverId.observe(this) { receiverIds ->
+
             loadReceiver(receiverIds)
         }
     }
 
     private fun loadReceiver(receiverIds: ArrayList<String>) {
         bunchOfItemChatRoom.clear()
-        for (id in receiverIds) {
-            userReference.child(id).addListenerForSingleValueEvent(object : ValueEventListener {
+
+        receiverIds.forEach { receiverId ->
+            userReference.child(receiverId).addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    snapshot.getValue(User::class.java)?.let { receiver ->
-                        includeGetItemChatFromReceiver(receiver, receiverIds)
-                    }
+                    val receiver = snapshot.getValue(User::class.java)
+                    receiver?.let { includeGetItemChatFromReceiver(it, receiverIds) }
                 }
 
                 override fun onCancelled(error: DatabaseError) {}
@@ -108,18 +109,17 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun includeGetItemChatFromReceiver(receiver: User, receiverIds: ArrayList<String>) {
+
         receiver.userId?.let {
-            chatReference.child(it).orderByChild("timestamp").limitToLast(1)
+            chatReference.child(it).orderByChild("timeStamp").limitToLast(1)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         if (snapshot.exists()) {
-                            val lastMessage = snapshot.children.iterator().next().getValue(Message::class.java)
-                            lastMessage?.let {
-                                val itemChatRoom = ItemChatRoom(receiver, it)
-                                bunchOfItemChatRoom.add(itemChatRoom)
-                                if (bunchOfItemChatRoom.size == receiverIds.size) {
-                                    bunchOfItemChatRoomLive.postValue(bunchOfItemChatRoom)
-                                }
+                            val lastMessage = snapshot.children.first().getValue(Message::class.java)
+                            val itemChatRoom = ItemChatRoom(receiver, lastMessage!!)
+                            bunchOfItemChatRoom.add(itemChatRoom)
+                            if (bunchOfItemChatRoom.size == receiverIds.size) {
+                                bunchOfItemChatRoomLive.postValue(bunchOfItemChatRoom)
                             }
                         } else {
                             Toast.makeText(this@ChatActivity, "include", Toast.LENGTH_SHORT).show()
@@ -129,6 +129,7 @@ class ChatActivity : AppCompatActivity() {
                     override fun onCancelled(error: DatabaseError) {}
                 })
         }
+        Log.d("sie", bunchOfItemChatRoom.size.toString())
     }
 
     private fun createChatListener() {
@@ -144,8 +145,8 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun includeHandleWhenChatChanged(receiverIds: ArrayList<String>, snapshot: DataSnapshot) {
-        for (item in snapshot.children) {
-            item.key?.let { receiverIds.add(it) }
+        snapshot.children.forEach { item ->
+            receiverIds.add(item.key!!)
         }
     }
 

@@ -1,33 +1,26 @@
 package com.uteating.foodapp.fragment.Home
 
 import android.os.Bundle
-import android.util.Log
 import android.util.Patterns
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import com.example.foodapp.Interface.APIService
-import com.example.foodapp.RetrofitClient
 import com.example.foodapp.custom.CustomMessageBox.FailToast
 import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast
 import com.example.foodapp.databinding.FragmentSignUpBinding
 import com.example.foodapp.dialog.LoadingDialog
 import com.example.foodapp.model.Cart
 import com.example.foodapp.model.User
-import com.example.foodapp.model.UserDTO
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class SignUpFragment : Fragment() {
 
     private lateinit var binding: FragmentSignUpBinding
     private lateinit var dialog: LoadingDialog
-    private lateinit var apiService: APIService
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

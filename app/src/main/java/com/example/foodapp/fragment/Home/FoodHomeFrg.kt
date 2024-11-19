@@ -10,8 +10,6 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.foodapp.Interface.APIService
-import com.example.foodapp.RetrofitClient
 import com.example.foodapp.adapter.Home.FoodDrinkFrgAdapter
 import com.example.foodapp.databinding.FragmentFoodHomeFrgBinding
 import com.example.foodapp.model.Product
@@ -19,10 +17,6 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class FoodHomeFrg(private val userId: String = "") : Fragment() {
     private lateinit var binding: FragmentFoodHomeFrgBinding

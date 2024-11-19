@@ -7,9 +7,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.foodapp.Interface.APIService
 import com.example.foodapp.R
-import com.example.foodapp.RetrofitClient
 import com.example.foodapp.activity.order.OrderActivity
 import com.example.foodapp.activity.order.OrderDetailActivity
 import com.example.foodapp.custom.CustomMessageBox.CustomAlertDialog
@@ -18,14 +16,10 @@ import com.example.foodapp.databinding.ItemOrderLayoutBinding
 import com.example.foodapp.helper.FirebaseStatusOrderHelper
 import com.example.foodapp.model.Bill
 import com.example.foodapp.model.BillInfo
-import com.example.foodapp.model.Product
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 
 class OrderAdapter(

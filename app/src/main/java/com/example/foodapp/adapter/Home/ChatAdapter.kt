@@ -17,15 +17,14 @@ import com.example.foodapp.activity.Home.ChatDetailActivity
 import com.example.foodapp.databinding.ItemChatBinding
 import com.example.foodapp.model.ItemChatRoom
 
+
 class ChatAdapter(
     private val context: Context,
-    private var bunchOfItemChatRooms: ArrayList<ItemChatRoom>
+    private val bunchOfItemChatRooms: ArrayList<ItemChatRoom>
 ) : RecyclerView.Adapter<ChatAdapter.ViewHolder>(), Filterable {
 
-    private val viewBinderHelper = ViewBinderHelper().apply {
-        setOpenOnlyOne(true)
-    }
-    private var currentBunchOfItemChatRooms = ArrayList(bunchOfItemChatRooms)
+    private val viewBinderHelper = ViewBinderHelper().apply { setOpenOnlyOne(true) }
+    private var currentBunchOfItemChatRooms = bunchOfItemChatRooms
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ItemChatBinding.inflate(LayoutInflater.from(context), parent, false)
@@ -38,7 +37,6 @@ class ChatAdapter(
             viewBinderHelper.bind(SwipeRevealLayout, itemChatRoom.receiver.userId)
             txtNameUser.text = itemChatRoom.receiver.userName
             txtLastMessage.setTextColor(context.getColor(R.color.app_color2))
-
             if (itemChatRoom.lastMessage?.senderId == FirebaseAuth.getInstance().currentUser?.uid) {
                 imgNewMessage.visibility = View.INVISIBLE
                 txtLastMessage.setTextColor(context.getColor(R.color.gray))
@@ -50,13 +48,11 @@ class ChatAdapter(
                     imgNewMessage.visibility = View.VISIBLE
                 }
             }
-
             Glide.with(context)
                 .load(itemChatRoom.receiver.avatarURL)
                 .placeholder(R.drawable.default_avatar)
                 .error(R.drawable.image_default)
                 .into(lnItemChat.imgUser)
-
             layout.setOnClickListener {
                 val intent = Intent(context, ChatDetailActivity::class.java).apply {
                     action = "chatActivity"
@@ -64,7 +60,6 @@ class ChatAdapter(
                 }
                 context.startActivity(intent)
             }
-
             txtLastMessage.text = itemChatRoom.lastMessage?.content ?: ""
         }
     }
@@ -73,25 +68,20 @@ class ChatAdapter(
 
     override fun getFilter(): Filter {
         return object : Filter() {
-            override fun performFiltering(charSequence: CharSequence?): FilterResults {
-                val key = charSequence.toString()
+            override fun performFiltering(constraint: CharSequence?): FilterResults {
+                val key = constraint.toString().lowercase()
                 currentBunchOfItemChatRooms = if (key.trim().isEmpty()) {
-                    ArrayList(bunchOfItemChatRooms)
+                    bunchOfItemChatRooms
                 } else {
-                    val filteredList = ArrayList<ItemChatRoom>()
-                    for (item in bunchOfItemChatRooms) {
-                        if (item.receiver.userName?.contains(key, ignoreCase = true) == true) {
-                            filteredList.add(item)
-                        }
-                    }
-                    filteredList
+                    bunchOfItemChatRooms.filter {
+                        it.receiver.userName?.lowercase()?.contains(key) ?: false
+                    } as ArrayList<ItemChatRoom>
                 }
                 return FilterResults().apply { values = currentBunchOfItemChatRooms }
             }
 
-            @Suppress("UNCHECKED_CAST")
-            override fun publishResults(charSequence: CharSequence?, filterResults: FilterResults?) {
-                currentBunchOfItemChatRooms = filterResults?.values as ArrayList<ItemChatRoom>
+            override fun publishResults(constraint: CharSequence?, results: FilterResults?) {
+                currentBunchOfItemChatRooms = results?.values as ArrayList<ItemChatRoom>
                 notifyDataSetChanged()
             }
         }

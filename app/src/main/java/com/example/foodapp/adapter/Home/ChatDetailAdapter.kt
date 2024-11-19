@@ -16,64 +16,57 @@ import java.util.Locale
 
 class ChatDetailAdapter(
     private val context: Context,
-    private val ds: ArrayList<Message>,
+    private val messages: List<Message>,
     private val userId: String,
     private val publisherId: String
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
-        const val ITEM_SEND = 1001
-        const val ITEM_RECEIVE = 1002
-        const val NULL_ITEM = 1003
+        private const val TYPE_SEND_MESSAGE = 0
+        private const val TYPE_RECEIVE_MESSAGE = 1
     }
-
-    private val formatHour = SimpleDateFormat("HH:mm a", Locale.getDefault())
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return if (viewType == ITEM_SEND) {
-            SendViewHolder(ItemSendMessageBinding.inflate(LayoutInflater.from(context), parent, false))
+        return if (viewType == TYPE_SEND_MESSAGE) {
+            val binding = ItemSendMessageBinding.inflate(LayoutInflater.from(context), parent, false)
+            SendMessageViewHolder(binding)
         } else {
-            ReceiveViewHolder(ItemReceiveMessageBinding.inflate(LayoutInflater.from(context), parent, false))
-        }
-    }
-
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val message = ds[position]
-
-        if (getItemViewType(position) == ITEM_SEND) {
-            val viewHolder = holder as SendViewHolder
-            with(viewHolder.binding) {
-                txtMessage.text = message.content
-                val timeText = formatHour.format(Date(message.timeStamp))
-                if (message.isSeen) {
-                    txtTime.text = "$timeText Seen"
-                    imgCheck.visibility = View.GONE
-                } else {
-                    txtTime.text = "$timeText Sent"
-                    imgDoubleCheck.visibility = View.GONE
-                }
-            }
-        } else {
-            val viewHolder = holder as ReceiveViewHolder
-            with(viewHolder.binding) {
-                txtMessage.text = message.content
-                txtTime.text = formatHour.format(Date(message.timeStamp))
-            }
+            val binding = ItemReceiveMessageBinding.inflate(LayoutInflater.from(context), parent, false)
+            ReceiveMessageViewHolder(binding)
         }
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (ds.isNotEmpty()) {
-            val message = ds[position]
-            if (message.senderId == userId) ITEM_SEND else ITEM_RECEIVE
-        } else {
-            NULL_ITEM
+        return if (messages[position].senderId == userId) TYPE_SEND_MESSAGE else TYPE_RECEIVE_MESSAGE
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val message = messages[position]
+        when (holder) {
+            is SendMessageViewHolder -> holder.bind(message)
+            is ReceiveMessageViewHolder -> holder.bind(message)
         }
     }
 
-    override fun getItemCount(): Int = ds.size
+    override fun getItemCount(): Int = messages.size
 
-    inner class SendViewHolder(val binding: ItemSendMessageBinding) : RecyclerView.ViewHolder(binding.root)
+    inner class SendMessageViewHolder(private val binding: ItemSendMessageBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(message: Message) {
+            binding.txtMessage.text = message.content
+            binding.txtTime.text = formatTime(message.timeStamp)
+        }
+    }
 
-    inner class ReceiveViewHolder(val binding: ItemReceiveMessageBinding) : RecyclerView.ViewHolder(binding.root)
+    inner class ReceiveMessageViewHolder(private val binding: ItemReceiveMessageBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(message: Message) {
+            binding.txtMessage.text = message.content
+            binding.txtTime.text = formatTime(message.timeStamp)
+            binding.imgDoubleCheck.visibility = if (message.isSeen) View.VISIBLE else View.GONE
+        }
+    }
+
+    private fun formatTime(time: Long): String {
+        val dateFormat = SimpleDateFormat("HH:mm dd/MM/yyyy", Locale.getDefault())
+        return dateFormat.format(Date(time))
+    }
 }

@@ -1,6 +1,7 @@
 package com.example.foodapp.activity.Home
 
 import android.Manifest
+
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -28,10 +29,14 @@ import com.example.foodapp.activity.Cart_PlaceOrder.CartActivity
 import com.example.foodapp.activity.Cart_PlaceOrder.EmptyCartActivity
 import com.example.foodapp.activity.MyShop.MyShopActivity
 import com.example.foodapp.activity.ProductInformation.ProductInfoActivity
+import com.example.foodapp.activity.manager.ManagerProductActivity
+import com.example.foodapp.activity.manager.ManagerUserActivity
 import com.example.foodapp.activity.order.OrderActivity
 import com.example.foodapp.activity.order.OrderDetailActivity
 import com.example.foodapp.activity.orderSellerManagement.DeliveryManagementActivity
+import com.example.foodapp.adapter.manager.ManagerUserAdapter
 import com.example.foodapp.custom.CustomMessageBox.CustomAlertDialog
+import com.example.foodapp.custom.CustomMessageBox.FailToast
 import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast
 import com.example.foodapp.databinding.ActivityHomeBinding
 import com.example.foodapp.fragment.Home.FavoriteFragment
@@ -50,15 +55,19 @@ import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import meow.bottomnavigation.MeowBottomNavigation
+
 
 class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
     private lateinit var userId: String
     private lateinit var binding: ActivityHomeBinding
     private lateinit var layoutMain: LinearLayout
     private var selectionFragment: Fragment? = null
+    private lateinit var userReference: DatabaseReference
+    private lateinit var userValueEventListener: ValueEventListener
 
     companion object {
         private const val NOTIFICATION_PERMISSION_CODE = 10023
@@ -69,11 +78,50 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-
         userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        userReference = FirebaseDatabase.getInstance().getReference("Users").child(userId)
+        Log.d("key", userReference.key.toString())
+        userReference.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    // Chuyển đổi dữ liệu từ snapshot sang một class hoặc Map
+                    val user = snapshot.getValue(User::class.java) // Dùng class User
+                    if (user != null) {
+                        if (user.admin == false){
+                            val navMenu = binding.navigationLeft.menu
+                            val item_user = navMenu.findItem(R.id.manager_user)
+                            val item_pro = navMenu.findItem(R.id.manager_product)
+                            item_user.setVisible(false)
+                            item_pro.setVisible(false)
+                        }
+                    }
+                } else {
+                    Log.e("Firebase", "User does not exist")
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("Firebase", "Error: ${error.message}")
+            }
+        })
+        userValueEventListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val isActive = snapshot.child("active").getValue(Boolean::class.java) ?: false
+                if (!isActive) {
+                    // Tài khoản bị khóa, thực hiện đăng xuất
+                    FirebaseAuth.getInstance().signOut()
+                    FailToast(this@HomeActivity, "Account blocked!").showToast()
 
+                    startActivity(Intent(this@HomeActivity, LoginActivity::class.java)
+                        .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK))
+                    finish()
+                }
+            }
 
+            override fun onCancelled(error: DatabaseError) {
+                println("Database error: ${error.message}")
+            }
+        }
+        userReference.addValueEventListener(userValueEventListener)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermission(Manifest.permission.POST_NOTIFICATIONS, 101)
             requestPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, 102)
@@ -82,6 +130,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         initUI()
         loadInformationForNavigationBar()
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        userReference.removeEventListener(userValueEventListener)
     }
 
     private fun initUI() {
@@ -242,6 +294,16 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 intent.putExtra("userId", userId)
                 startActivity(intent)
             }
+            R.id.manager_user -> {
+                val intent = Intent(this, ManagerUserActivity::class.java)
+                intent.putExtra("userId", userId)
+                startActivity(intent)
+            }
+            R.id.manager_product -> {
+                val intent = Intent(this, ManagerProductActivity::class.java)
+                intent.putExtra("userId", userId)
+                startActivity(intent)
+            }
             R.id.logoutMenu -> {
                 CustomAlertDialog(this, "Do you want to logout?").apply {
                     CustomAlertDialog.binding.btnYes.setOnClickListener {
@@ -265,6 +327,11 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         binding.drawLayoutHome.close()
         return true
     }
+    override fun onBackPressed() {
+        super.onBackPressed()
+        moveTaskToBack(true)
+    }
+
 
     fun loadInformationForNavigationBar() {
 
@@ -300,7 +367,13 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val imgAvatarInNavigationBar: ShapeableImageView = headerView.findViewById(R.id.imgAvatarInNavigationBar)
                 val txtNameInNavigationBar: TextView = headerView.findViewById(R.id.txtNameInNavigationBar)
                 txtNameInNavigationBar.text = "Hi, ${getLastName(user?.userName ?: "")}"
-                Glide.with(this@HomeActivity).load(user?.avatarURL).placeholder(R.drawable.default_avatar).into(imgAvatarInNavigationBar)
+                if (!this@HomeActivity.isDestroyed && !this@HomeActivity.isFinishing) {
+                    Glide.with(this@HomeActivity)
+                        .load(user?.avatarURL)
+                        .placeholder(R.drawable.default_avatar)
+                        .into(imgAvatarInNavigationBar)
+                }
+
             }
 
             override fun dataIsInserted() {

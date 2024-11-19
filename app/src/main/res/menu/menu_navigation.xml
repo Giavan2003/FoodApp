@@ -20,9 +20,14 @@
         android:icon="@drawable/shop_icon"
         app:cnb_iconColor="@color/main"/>
     <item
-        android:id="@+id/manager"
+        android:id="@+id/manager_user"
         android:icon="@drawable/baseline_manages_24"
-        android:title="Manager"
+        android:title="Manager user"
+        app:cnb_iconColor="@color/main" />
+    <item
+        android:id="@+id/manager_product"
+        android:icon="@drawable/baseline_manages_product_24"
+        android:title="Manager product"
         app:cnb_iconColor="@color/main" />
     <item
         android:id="@+id/logoutMenu"
