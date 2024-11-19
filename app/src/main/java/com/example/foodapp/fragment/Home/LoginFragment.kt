@@ -9,8 +9,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.example.foodapp.R
-import com.example.foodapp.activity.Cart_PlaceOrder.HomeActivity
-//import com.example.foodapp.activity.Cart_PlaceOrder.HomeActivity
+import com.example.foodapp.activity.Home.HomeActivity
 import com.example.foodapp.activity.Home.ForgotActivity
 
 import com.example.foodapp.custom.CustomMessageBox.FailToast
@@ -35,7 +34,6 @@ class LoginFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
         binding = FragmentLoginBinding.inflate(inflater, container, false)
 
         binding.btnReset.setOnClickListener {
@@ -49,16 +47,24 @@ class LoginFragment : Fragment() {
                     .addOnCompleteListener { task ->
                         if (task.isSuccessful) {
                             val idCurrentUser = FirebaseAuth.getInstance().currentUser?.uid
-                            idCurrentUser?.let {
+                            idCurrentUser?.let { userId ->
+                                val userRef = FirebaseDatabase.getInstance().getReference("Users").child(userId)
+                                userRef.child("password").setValue(password)
+                                    .addOnCompleteListener { dbTask ->
+                                        if (!dbTask.isSuccessful) {
+                                            Log.e("UpdatePassword", "Failed to update password in Users table")
+                                        }
+                                    }
+
                                 FirebaseDatabase.getInstance().getReference("Users")
-                                    .child(it)
+                                    .child(userId)
                                     .addListenerForSingleValueEvent(object : ValueEventListener {
                                         override fun onDataChange(snapshot: DataSnapshot) {
                                             SuccessfulToast(requireContext(), "Login successfully!").showToast()
-                                            Intent(requireContext(), HomeActivity::class.java).also {
-                                                startActivity(it)
-                                                requireActivity().finish()
-                                            }
+                                            val intent = Intent(requireContext(), HomeActivity::class.java)
+                                            intent.putExtra("userId", userId)
+                                            startActivity(intent)
+                                            requireActivity().finish()
                                         }
 
                                         override fun onCancelled(error: DatabaseError) {
@@ -73,7 +79,7 @@ class LoginFragment : Fragment() {
             }
         }
 
-        view?.findViewById<TextView>(R.id.forgotpassText)?.setOnClickListener {
+        binding.forgotpassText.setOnClickListener {
             val intent = Intent(requireContext(), ForgotActivity::class.java)
             startActivity(intent)
         }

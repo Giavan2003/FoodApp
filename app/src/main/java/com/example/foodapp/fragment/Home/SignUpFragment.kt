@@ -33,11 +33,12 @@ class SignUpFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+
         binding = FragmentSignUpBinding.inflate(inflater, container, false)
         binding.btnSignUp.setOnClickListener {
             if (check()) {
                 val phone = binding.edtPhone.text.toString()
+                val fulname = binding.edtFullName.text.toString()
                 val username = binding.edtName.text.toString()
                 val email = binding.edtEmail.text.toString()
                 val pass = binding.edtPass.text.toString()
@@ -50,48 +51,56 @@ class SignUpFragment : Fragment() {
                         if (task.isSuccessful) {
                             val userId = task.result?.user?.uid
                             if (userId != null) {
-                                val user = User(userId, fullname, email,username,pass, phone)
-                                val cartId = FirebaseDatabase.getInstance().reference.push().key ?: ""
+                                val tmp = User(userId,fulname,email,pass,"","01/01/2000",username,phone,true)
+                                val cartId =
+                                    FirebaseDatabase.getInstance().reference.push().key ?: ""
                                 val cart = Cart(cartId, 0, 0, userId)
-                                FirebaseDatabase.getInstance().getReference("Users")
-                                    .child(userId)
-                                    .setValue(user)
-                                    .addOnCompleteListener { userTask ->
+
+                                FirebaseDatabase.getInstance().reference.child("Users")
+                                    .child(tmp.userId!!)
+                                    .setValue(tmp).addOnCompleteListener { userTask ->
                                         if (userTask.isSuccessful) {
-                                            FirebaseDatabase.getInstance().getReference("Carts")
-                                                .child(cartId)
-                                                .setValue(cart)
-                                            SuccessfulToast(requireContext(), "Create account successfully").showToast()
                                             dialog.dismiss()
+                                            FirebaseDatabase.getInstance().reference.child("Carts")
+                                                .child(cart.cartId!!).setValue(cart)
+                                            SuccessfulToast(
+                                                requireContext(),
+                                                "Create account successfully"
+                                            ).showToast()
                                         } else {
                                             dialog.dismiss()
-                                            FailToast(requireContext(), "Create account unsuccessfully").showToast()
+                                            FailToast(
+                                                requireContext(),
+                                                "Create account unsuccessfully"
+                                            ).showToast()
                                         }
                                     }
                             } else {
                                 dialog.dismiss()
-                                FailToast(requireContext(), "Failed to get user ID").showToast()  // Thông báo nếu userId là null
+                                FailToast(requireContext(), "Failed to get user ID").showToast()
                             }
                         } else {
+                            createDialog("Email đã tồn tại").show()
                             dialog.dismiss()
-                            FailToast(requireContext(), "Create account unsuccessfully").showToast()
                         }
-
                     }
             }
         }
 
-        return binding.root
+
+            return binding.root
     }
 
     private fun check(): Boolean {
         val phone = binding.edtPhone.text.toString()
-        val name = binding.edtName.text.toString()
+        val fullName = binding.edtFullName.text.toString()
+        val userName = binding.edtName.text.toString()
         val email = binding.edtEmail.text.toString()
         val pass = binding.edtPass.text.toString()
 
+
         return when {
-            phone.isEmpty() || name.isEmpty() || email.isEmpty() || pass.isEmpty() -> {
+            phone.isEmpty() || fullName.isEmpty() || email.isEmpty() || pass.isEmpty() || userName.isEmpty() -> {
                 createDialog("Điền đầy đủ thông tin").show()
                 false
             }
@@ -116,3 +125,4 @@ class SignUpFragment : Fragment() {
             .create()
     }
 }
+

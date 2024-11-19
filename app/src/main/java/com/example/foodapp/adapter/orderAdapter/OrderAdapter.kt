@@ -18,7 +18,6 @@ import com.example.foodapp.databinding.ItemOrderLayoutBinding
 import com.example.foodapp.helper.FirebaseStatusOrderHelper
 import com.example.foodapp.model.Bill
 import com.example.foodapp.model.BillInfo
-import com.example.foodapp.model.CurrencyFormatter
 import com.example.foodapp.model.Product
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -31,75 +30,21 @@ import retrofit2.Response
 
 class OrderAdapter(
     private val context: Context,
-    private val dsOrder: ArrayList<Bill>?,
+    private val dsOrder: ArrayList<Bill>,
     private val type: Int,
     private val userId: String
 ) : RecyclerView.Adapter<OrderAdapter.ViewHolder>() {
 
-    private val apiService: APIService = RetrofitClient.retrofit!!.create(APIService::class.java)
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(
-            ItemOrderLayoutBinding.inflate(
-                LayoutInflater.from(context),
-                parent,
-                false
-            )
-        )
+        return ViewHolder(ItemOrderLayoutBinding.inflate(LayoutInflater.from(context), parent, false))
     }
 
-    override fun onBindViewHolder(viewHolder: ViewHolder, position: Int) {
-        val tmp: Bill = dsOrder!![position]
-
-        // Cập nhật thông tin hóa đơn vào giao diện
-        viewHolder.binding.txtId.text = tmp.billId ?: "Unknown"
-        viewHolder.binding.txtDate.text = tmp.orderDate ?: "Unknown"
-        viewHolder.binding.txtStatus.text = tmp.orderStatus ?: "Unknown"
-        viewHolder.binding.txtTotal.text = CurrencyFormatter.getInstance().format(tmp.totalPrice.toDouble())
-            .format(tmp.totalPrice.toDouble())
-
-        // Hiển thị hình ảnh sản phẩm liên quan đến hóa đơn
-        tmp.billId?.let { billId ->
-            FirebaseDatabase.getInstance().getReference("BillInfos").child(billId)
-                .addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onDataChange(snapshot: DataSnapshot) {
-                        val billInfo: BillInfo? = snapshot.children.iterator().next().getValue(
-                            BillInfo::class.java
-                        )
-                        billInfo?.let {
-                            apiService.getProductInfor(it.productId!!)
-                                .enqueue(object : Callback<Product?> {
-                                    override fun onResponse(
-                                        call: Call<Product?>,
-                                        response: Response<Product?>
-                                    ) {
-                                        response.body()?.let { product ->
-                                            Glide.with(context)
-                                                .load(product.productImage1)
-                                                .placeholder(R.drawable.default_image)
-                                                .into(viewHolder.binding.imgFood)
-                                        }
-                                    }
-
-                                    override fun onFailure(call: Call<Product?>, t: Throwable) {
-
-                                    }
-                                })
-                        }
-                    }
-
-                    override fun onCancelled(error: DatabaseError) {
-
-                    }
-                })
-        }
-
-
-        if (type == OrderActivity.CURRENT_ORDER) {
-            viewHolder.binding.btnSee.text = "Received"
-            updateReceivedButtonState(viewHolder, tmp.orderStatus)
-            viewHolder.binding.btnSee.setOnClickListener {
-                if (viewHolder.binding.txtStatus.text == "Shipping") {
-                    CustomAlertDialog(context, "Do you want to confirm this order?")
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val tmp = dsOrder[position]
+        with(holder.binding) {
+            if (type == OrderActivity.CURRENT_ORDER) {
+                btnSee.text = "Received"
+                btnSee.setOnClickListener {
                     CustomAlertDialog.binding.btnYes.setOnClickListener {
                         tmp.billId?.let { billId ->
                             FirebaseStatusOrderHelper().setShippingToCompleted(
@@ -114,12 +59,8 @@ class OrderAdapter(
                                     }
 
                                     override fun dataIsUpdated() {
-                                        SuccessfulToast(
-                                            context,
-                                            "Your order has been changed to completed state!"
-                                        ).showToast()
-                                        viewHolder.binding.txtStatus.text = "Completed"
-                                        updateReceivedButtonState(viewHolder, "Completed")
+                                        SuccessfulToast(context, "Your order has been changed to completed state!").showToast()
+
                                     }
 
                                     override fun dataIsDeleted() {
@@ -134,41 +75,69 @@ class OrderAdapter(
                         CustomAlertDialog.alertDialog.dismiss()
                     }
                     CustomAlertDialog.showAlertDialog()
+
+                }
+            } else {
+                txtStatus.setTextColor(Color.parseColor("#48DC7D"))
+                btnSee.text = "Feedback & Rate"
+                if (tmp.isCheckAllComment) {
+                    btnSee.isEnabled = false
+                    btnSee.setBackgroundResource(R.drawable.background_feedback_disabled_button)
+                } else {
+                    btnSee.isEnabled = true
+                    btnSee.setBackgroundResource(R.drawable.background_feedback_enable_button)
+                }
+                btnSee.setOnClickListener {
+                    val intent = Intent(context, OrderDetailActivity::class.java).apply {
+                        putExtra("Bill", tmp)
+                        putExtra("userId", userId)
+                    }
+                    context.startActivity(intent)
                 }
             }
-        } else {
-            viewHolder.binding.txtStatus.setTextColor(Color.parseColor("#48DC7D"))
-            viewHolder.binding.btnSee.text = "Feedback & Rate"
-            viewHolder.binding.btnSee.isEnabled = !tmp.isCheckAllComment
-            viewHolder.binding.btnSee.setBackgroundResource(
-                if (tmp.isCheckAllComment) R.drawable.background_feedback_disabled_button
-                else R.drawable.background_feedback_enable_button
-            )
-            viewHolder.binding.btnSee.setOnClickListener {
-                val intent = Intent(context, OrderDetailActivity::class.java)
-                intent.putExtra("Bill", tmp)
-                intent.putExtra("userId", userId)
+
+            txtId.text = tmp.billId.toString()
+            txtDate.text = tmp.orderDate.toString()
+            txtStatus.text = tmp.orderStatus
+            txtTotal.text = CurrencyFormatter.getFormatter().format(tmp.totalPrice.toDouble()).toString()
+
+            root.setOnClickListener {
+                val intent = Intent(context, OrderDetailActivity::class.java).apply {
+                    putExtra("Bill", tmp)
+                    putExtra("userId", userId)
+                }
                 context.startActivity(intent)
             }
+
+            FirebaseDatabase.getInstance().getReference("BillInfos").child(tmp.billId!!)
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        val tmpBillInfo = snapshot.children.firstOrNull()?.getValue(BillInfo::class.java)
+                        tmpBillInfo?.let {
+                            FirebaseDatabase.getInstance().getReference("Products")
+                                .child(it.productId!!)
+                                .child("productImage1")
+                                .addListenerForSingleValueEvent(object : ValueEventListener {
+                                    override fun onDataChange(snapshot: DataSnapshot) {
+                                        Glide.with(context)
+                                            .load(snapshot.getValue(String::class.java))
+                                            .placeholder(R.drawable.default_image)
+                                            .into(imgFood)
+                                    }
+
+                                    override fun onCancelled(error: DatabaseError) {}
+                                })
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {}
+                })
         }
-
-        viewHolder.binding.root.setOnClickListener {
-            val intent = Intent(context, OrderDetailActivity::class.java)
-            intent.putExtra("Bill", tmp)
-            intent.putExtra("userId", userId)
-            context.startActivity(intent)
-        }
     }
 
-    override fun getItemCount(): Int {
-        return dsOrder?.size ?: 0
-    }
-
-    private fun updateReceivedButtonState(viewHolder: ViewHolder, status: String?) {
-        viewHolder.binding.btnSee.isEnabled = status == "Shipping"
-    }
+    override fun getItemCount(): Int = dsOrder.size
 
     class ViewHolder(val binding: ItemOrderLayoutBinding) : RecyclerView.ViewHolder(binding.root)
-
 }
+
 

@@ -16,13 +16,18 @@ import com.example.foodapp.RetrofitClient
 import com.example.foodapp.adapter.Home.FoodDrinkFrgAdapter
 import com.example.foodapp.databinding.FragmentDrinkHomeFrgBinding
 import com.example.foodapp.model.Product
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 
 class DrinkHomeFrg(private val userId: String) : Fragment() {
-    private lateinit var dsCurrentDrink: MutableList<Product>
+    private lateinit var dsCurrentDrink: MutableList<Product?>
     private lateinit var totalDrink: List<Product>
     private lateinit var binding: FragmentDrinkHomeFrgBinding
     private lateinit var adapter: FoodDrinkFrgAdapter
@@ -31,7 +36,6 @@ class DrinkHomeFrg(private val userId: String) : Fragment() {
     private var isScrolling = true
     private var lastKey: String? = null
     private var position = 0
-    private lateinit var apiService: APIService
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -68,11 +72,24 @@ class DrinkHomeFrg(private val userId: String) : Fragment() {
     private fun initData() {
         Log.d("Data", "done")
         dsCurrentDrink = mutableListOf()
-        apiService = RetrofitClient.retrofit!!.create(APIService::class.java)
-        apiService.getProductsByType("drink").enqueue(object : Callback<List<Product>> {
-            override fun onResponse(call: Call<List<Product>>, response: Response<List<Product>>) {
-                if (response.isSuccessful) {
-                    totalDrink = response.body() ?: emptyList()
+
+
+        FirebaseDatabase.getInstance().getReference("Products")
+            .orderByChild("productType")
+            .equalTo("Drink")
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    totalDrink = mutableListOf()
+                    for (item in snapshot.children) {
+                        val product = item.getValue(Product::class.java)
+                        if (product != null) {
+
+                            if (product.productType == "Drink") {
+                                totalDrink = totalDrink + product
+                            }
+                        }
+                    }
+
                     var i = 0
                     while (position < totalDrink.size && i < itemCount) {
                         dsCurrentDrink.add(totalDrink[position])
@@ -80,25 +97,22 @@ class DrinkHomeFrg(private val userId: String) : Fragment() {
                         i++
                     }
                     adapter.notifyDataSetChanged()
-                } else {
-                    // Handle the error case if needed
                 }
-            }
 
-            override fun onFailure(call: Call<List<Product>>, t: Throwable) {
-                // Handle failure case
-            }
-        })
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("FirebaseError", "Error fetching data", error.toException())
+                }
+            })
     }
+
 
     private fun loadMore() {
         if (position < totalDrink.size) {
-            lateinit var dsCurrentDrink: MutableList<Product?>
             dsCurrentDrink.add(null)
-
             adapter.notifyItemInserted(dsCurrentDrink.size - 1)
+
             Handler(Looper.getMainLooper()).postDelayed({
-                dsCurrentDrink.removeAt(dsCurrentDrink.size - 1) // Remove the loading item
+                dsCurrentDrink.removeAt(dsCurrentDrink.size - 1)
                 var i = 0
                 while (position < totalDrink.size && i < itemCount) {
                     dsCurrentDrink.add(totalDrink[position])
@@ -114,4 +128,3 @@ class DrinkHomeFrg(private val userId: String) : Fragment() {
         }
     }
 }
-

@@ -31,25 +31,25 @@ class IntroActivity : ComponentActivity() {
             return
         }
 
-        // Thiết lập binding
+
         binding = ActivityIntroBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Dữ liệu hình ảnh cho màn hình Intro
+
         val images = arrayListOf(
-            R.drawable.choice,  // Ảnh 1
-            R.drawable.delivery,  // Ảnh 2
-            R.drawable.tracking   // Ảnh 3
+            R.drawable.choice,
+            R.drawable.delivery,
+            R.drawable.tracking
         )
 
-        // Thiết lập Adapter cho ViewPager
+
         val introAdapter = IntroAdapter(images, this)
         binding.viewpaper.adapter = introAdapter
 
-        // Cài đặt TabLayout với ViewPager2
+
         TabLayoutMediator(binding.tablayout, binding.viewpaper) { _, _ -> }.attach()
 
-        // Hiển thị nút "Next" khi đến trang cuối cùng
+
         binding.viewpaper.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
@@ -57,17 +57,17 @@ class IntroActivity : ComponentActivity() {
             }
         })
 
-        // Cài đặt sự kiện cho nút Next
+
         binding.btnNext.setOnClickListener {
-            // Chuyển sang màn hình LoginActivity khi nhấn "Next"
+
             startActivity(Intent(this, LoginActivity::class.java))
             finish()
         }
 
-        // Đăng xuất Firebase (nếu có người dùng đã đăng nhập)
+
         FirebaseAuth.getInstance().signOut()
 
-        // Đánh dấu rằng Intro đã được hiển thị
+
         preferences.edit().putBoolean("isIntroShown", true).apply()
     }
 }

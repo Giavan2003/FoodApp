@@ -12,7 +12,7 @@ import com.chauthai.swipereveallayout.ViewBinderHelper
 import com.google.firebase.database.FirebaseDatabase
 import com.example.foodapp.R
 import com.example.foodapp.activity.MyShop.AddFoodActivity
-import com.example.foodapp.activity.ProductInfomation.ProductInfoActivity
+import com.example.foodapp.activity.ProductInformation.ProductInfoActivity
 import com.example.foodapp.custom.CustomMessageBox.CustomAlertDialog
 import com.example.foodapp.custom.CustomMessageBox.FailToast
 import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast

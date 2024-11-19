@@ -102,7 +102,7 @@ class FirebaseNotificationHelper(private val mContext: Context) {
             notification.productId = productId
             notification.billId = billId
             notification.confirmId = confirmId
-            notification.setPublisher(publisher)
+            notification.publisher=publisher
             val sdf = SimpleDateFormat("dd-MM-yyyy HH:mm:ss")
             val currentDateAndTime = sdf.format(Date())
             notification.time = currentDateAndTime
