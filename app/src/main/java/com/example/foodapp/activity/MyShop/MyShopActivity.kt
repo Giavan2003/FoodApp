@@ -21,8 +21,7 @@ class MyShopActivity : AppCompatActivity() {
         window.statusBarColor = Color.parseColor("#E8584D")
         window.navigationBarColor = Color.parseColor("#E8584D")
 
-//        userId = intent.getStringExtra("userId")
-        userId = "sWuMLC04RPbSx4mzR0faHjhpwVP2"
+        userId = intent.getStringExtra("userId")
 
         binding.cardMyFood.setOnClickListener {
             val intent = Intent(this@MyShopActivity, MyFoodActivity::class.java)

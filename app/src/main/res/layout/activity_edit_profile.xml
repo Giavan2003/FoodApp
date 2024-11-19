@@ -125,6 +125,44 @@
                 android:id="@+id/email"/>
         </com.google.android.material.textfield.TextInputLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="0dp">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:startIconDrawable="@drawable/baseline_cake_24"
+                style="@style/Widget.Material3.TextInputEditText.OutlinedBox"
+                android:layout_marginTop="-20dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:hint="Birthday">
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="phone"
+                    android:clickable="false"
+                    android:cursorVisible="false"
+                    android:focusable="false"
+                    android:focusableInTouchMode="false"
+                    android:maxLines="1"
+                    android:lines="1"
+                    android:id="@+id/birth_date"/>
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="-70dp"
+                android:layout_marginTop="15dp"
+                android:src="@drawable/ic_calendar"
+                android:id="@+id/date_picker"/>
+
+        </LinearLayout>
+
         <Button
             android:layout_width="match_parent"
             android:layout_height="60dp"

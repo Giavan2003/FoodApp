@@ -22,7 +22,7 @@ class MyFoodActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMyFoodBinding
     private val ds: MutableList<Product> = ArrayList()
     private lateinit var adapter: MyFoodAdapter
-    private var userId: String? = null
+    private lateinit var userId: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,9 +32,9 @@ class MyFoodActivity : AppCompatActivity() {
         window.statusBarColor = Color.parseColor("#E8584D")
         window.navigationBarColor = Color.parseColor("#E8584D")
 
-        //userId = intent.getStringExtra("userId")
-        userId = "sWuMLC04RPbSx4mzR0faHjhpwVP2"
-        adapter = MyFoodAdapter(ds, this, userId ?: "")
+        userId = intent.getStringExtra("userId").toString()
+
+        adapter = MyFoodAdapter(ds, this, userId)
         binding.recycleView.setHasFixedSize(true)
         binding.recycleView.layoutManager = LinearLayoutManager(this, RecyclerView.VERTICAL, false)
         binding.recycleView.adapter = adapter
