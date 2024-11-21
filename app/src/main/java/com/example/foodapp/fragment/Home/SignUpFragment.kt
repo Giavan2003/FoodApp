@@ -35,7 +35,7 @@ class SignUpFragment : Fragment() {
                 val username = binding.edtName.text.toString()
                 val email = binding.edtEmail.text.toString()
                 val pass = binding.edtPass.text.toString()
-                val fullname = "TUNGNT"
+
                 dialog = LoadingDialog(requireContext())
                 dialog.show()
 
@@ -44,7 +44,7 @@ class SignUpFragment : Fragment() {
                         if (task.isSuccessful) {
                             val userId = task.result?.user?.uid
                             if (userId != null) {
-                                val tmp = User(userId,fulname,email,pass,"","01/01/2000",username,phone,true)
+                                val tmp = User(userId,fulname,email,pass,"https://cdn-icons-png.flaticon.com/512/13385/13385864.png","01/01/2000",username,phone,true)
                                 val cartId =
                                     FirebaseDatabase.getInstance().reference.push().key ?: ""
                                 val cart = Cart(cartId, 0, 0, userId)

@@ -15,6 +15,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import android.util.Patterns
 
 class UpdateAddAddressActivity : AppCompatActivity() {
     private lateinit var binding: ActivityUpdateAddAddressBinding
@@ -159,20 +160,38 @@ class UpdateAddAddressActivity : AppCompatActivity() {
     private fun validateAddressInfo(): Boolean {
         return when {
             binding.fullName.text.isNullOrEmpty() -> {
-                FailToast(this, "Receiver name must not be empty!").showToast()
+                FailToast(this, "Tên người nhận không được phép để trống!").showToast()
+                false
+            }
+            !isValidString( binding.fullName.text.toString()) ->{
+                FailToast(this, "Tên không hợp lệ!").showToast()
                 false
             }
             binding.phoneNumber.text.isNullOrEmpty() -> {
-                FailToast(this, "Receiver phone number must not be empty!").showToast()
+                FailToast(this, "Vui lòng điền đầy đủ số điẹn thoại!").showToast()
+                false
+            }
+            !isValidPhoneNumber(binding.phoneNumber.text.toString()) -> {
+                FailToast(this, "Số điện thoại không hợp lệ!").showToast()
                 false
             }
             binding.detailAddress.text.isNullOrEmpty() -> {
-                FailToast(this, "Detail address must not be empty!").showToast()
+                FailToast(this, "Địa chỉ không được phép để trống").showToast()
                 false
             }
+
             else -> true
         }
     }
+    private fun isValidPhoneNumber(phoneNumber: String): Boolean {
+        val phonePattern = "^[0-9]{10}$"
+        return phoneNumber.matches(Regex(phonePattern))
+    }
+    private fun isValidString(input: String): Boolean {
+        val pattern = "^[a-zA-Z\\s]+$"
+        return input.matches(Regex(pattern))
+    }
+
 }
 
 
