@@ -28,6 +28,8 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import java.util.Calendar
 
+
+
 class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityEditProfileBinding
@@ -54,6 +56,15 @@ class EditProfileActivity : AppCompatActivity() {
 
         binding.profileImage.setOnClickListener { openImagePicker() }
         binding.changePhoto.setOnClickListener { openImagePicker() }
+
+        // Text Watchers for profile information
+        binding.fullName.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(charSequence: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun onTextChanged(charSequence: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(editable: Editable?) {
+                checkProfileChanges()
+            }
+        })
 
         binding.userName.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(charSequence: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -98,7 +109,8 @@ class EditProfileActivity : AppCompatActivity() {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val user = snapshot.getValue(User::class.java)
                     user?.let {
-                        binding.update.isEnabled = !(it.userName == binding.userName.text.toString() &&
+                        binding.update.isEnabled = !(it.fullName == binding.fullName.text.toString() &&
+                                it.userName == binding.userName.text.toString() &&
                                 it.email == binding.email.text.toString() &&
                                 it.phoneNumber == binding.phoneNumber.text.toString() &&
                                 it.birthDate == binding.birthDate.text.toString())
@@ -113,6 +125,7 @@ class EditProfileActivity : AppCompatActivity() {
         val emailTxt = binding.email.text.toString().trim()
         val phoneNumberTxt = binding.phoneNumber.text.toString().trim()
         val userNameTxt = binding.userName.text.toString().trim()
+        val fullNameTxt = binding.fullName.text.toString().trim()
 
         if (emailTxt.isEmpty()) {
             FailToast(this, "Email must not be empty!").showToast()
@@ -139,7 +152,8 @@ class EditProfileActivity : AppCompatActivity() {
             "birthDate" to binding.birthDate.text.toString(),
             "email" to binding.email.text.toString(),
             "phoneNumber" to binding.phoneNumber.text.toString(),
-            "userName" to binding.userName.text.toString()
+            "userName" to binding.userName.text.toString(),
+            "fullName" to fullNameTxt
         )
         FirebaseDatabase.getInstance().getReference("Users").child(userId)
             .updateChildren(map)
@@ -191,6 +205,7 @@ class EditProfileActivity : AppCompatActivity() {
                         binding.email.setText(it.email)
                         binding.phoneNumber.setText(it.phoneNumber)
                         binding.birthDate.setText(it.birthDate)
+                        binding.fullName.setText(it.fullName)
                         imageUrl = it.avatarURL
                     }
                 }
@@ -246,8 +261,6 @@ class EditProfileActivity : AppCompatActivity() {
 
                             datePickerDialog = DatePickerDialog(this@EditProfileActivity, style, dateSetListener, year, month - 1, day)
                         } else {
-                            // Handle case where birthDate is null, e.g., set default date or show a message
-                            // For example, you can use current date as the default
                             val calendar = Calendar.getInstance()
                             datePickerDialog = DatePickerDialog(
                                 this@EditProfileActivity,
@@ -263,9 +276,7 @@ class EditProfileActivity : AppCompatActivity() {
 
                 override fun onCancelled(error: DatabaseError) {}
             })
-
     }
-
     private fun initToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.apply {
@@ -295,15 +306,12 @@ class EditProfileActivity : AppCompatActivity() {
     }
 
     private fun getDMY(day: Int, month: Int, year: Int): String {
-        return when {
-            day in 1..9 && month in 1..9 -> "0$day/0$month/$year"
-            day in 1..9 -> "0$day/$month/$year"
-            month in 1..9 -> "$day/0$month/$year"
-            else -> "$day/$month/$year"
-        }
+        return "$day/$month/$year"
     }
 
     private fun getFileExtension(uri: Uri): String {
-        return MimeTypeMap.getSingleton().getExtensionFromMimeType(contentResolver.getType(uri)) ?: ""
+        val contentResolver = contentResolver
+        return MimeTypeMap.getSingleton()
+            .getExtensionFromMimeType(contentResolver.getType(uri)) ?: ""
     }
 }

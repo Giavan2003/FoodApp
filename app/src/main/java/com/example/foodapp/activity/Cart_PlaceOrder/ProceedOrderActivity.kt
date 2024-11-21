@@ -123,7 +123,7 @@ class ProceedOrderActivity : AppCompatActivity() {
                                                             snapshot.children.forEach { ds ->
                                                                 val cart = ds.getValue(Cart::class.java)
                                                                 if (cart?.userId == userId) {
-                                                                    FirebaseDatabase.getInstance().reference.child("CartInfos")
+                                                                    FirebaseDatabase.getInstance().reference.child("CartInfo's")
                                                                         .child(cart.cartId!!).child(cartInfo.cartInfoId!!)
                                                                         .removeValue()
                                                                 }
