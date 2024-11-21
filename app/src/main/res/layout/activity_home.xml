@@ -42,7 +42,7 @@
         </LinearLayout>
 
 
-        <meow.bottomnavigation.MeowBottomNavigation
+        <com.etebarian.meowbottomnavigation.MeowBottomNavigation
             android:id="@+id/bottomNavigation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

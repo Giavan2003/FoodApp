@@ -10,11 +10,14 @@ import com.example.foodapp.adapter.NotificationListAdapter
 import com.example.foodapp.databinding.FragmentNotificationBinding
 import com.example.foodapp.helper.FirebaseNotificationHelper
 import com.example.foodapp.model.Notification
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 class NotificationFragment(private val userId: String) : Fragment() {
 
     private var _binding: FragmentNotificationBinding? = null
     private val binding get() = _binding!!
+    private var notificationListener: ValueEventListener? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,31 +37,31 @@ class NotificationFragment(private val userId: String) : Fragment() {
                 notificationList: List<Notification>,
                 notificationListToNotify: List<Notification>
             ) {
-                val adapter = NotificationListAdapter(requireContext(), notificationList, userId)
-                binding.recNotification.apply {
-                    setHasFixedSize(true)
-                    layoutManager = LinearLayoutManager(requireContext())
-                    this.adapter = adapter
+                if (!isAdded) return // Đảm bảo Fragment còn hoạt động
+
+                binding.let {
+                    val adapter = NotificationListAdapter(requireContext(), notificationList, userId)
+                    it.recNotification.apply {
+                        setHasFixedSize(true)
+                        layoutManager = LinearLayoutManager(requireContext())
+                        this.adapter = adapter
+                    }
+                    it.progressBarNotification.visibility = View.GONE
                 }
-                binding.progressBarNotification.visibility = View.GONE
             }
 
-            override fun DataIsInserted() {
-                // Handle data insertion if needed
-            }
-
-            override fun DataIsUpdated() {
-                // Handle data update if needed
-            }
-
-            override fun DataIsDeleted() {
-                // Handle data deletion if needed
-            }
+            override fun DataIsInserted() {}
+            override fun DataIsUpdated() {}
+            override fun DataIsDeleted() {}
         })
     }
 
+
     override fun onDestroyView() {
         super.onDestroyView()
+        notificationListener?.let {
+            FirebaseDatabase.getInstance().reference.removeEventListener(it)
+        }
         _binding = null
     }
 }

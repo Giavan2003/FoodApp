@@ -45,28 +45,32 @@ class MyFoodAdapter(
             .into(holder.binding.imgFood)
 
         holder.binding.imgDelete.setOnClickListener {
-            CustomAlertDialog(context, "Delete this product?")
-            CustomAlertDialog.binding.btnYes.setOnClickListener {
-                CustomAlertDialog.alertDialog.dismiss()
-                FirebaseDatabase.getInstance().getReference("Products")
-                    .child(product.productId ?: "")
-                    .child("state")
-                    .setValue("deleted")
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            (ds as ArrayList).remove(product)
-                            notifyItemRemoved(position)
-                            SuccessfulToast(context, "Delete product successfully!").showToast()
-                        } else {
-                            FailToast(context, "Delete product failed!").showToast()
-                            Log.e("My Shop", "Error remove")
+            val customAlertDialog = CustomAlertDialog(context, "Delete this product?").apply {
+                binding.btnYes.setOnClickListener {
+                    alertDialog.dismiss()
+                    FirebaseDatabase.getInstance().getReference("Products")
+                        .child(product.productId ?: "")
+                        .child("state")
+                        .setValue("deleted")
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                (ds as ArrayList).remove(product)
+                                notifyItemRemoved(position)
+                                SuccessfulToast(context, "Delete product successfully!").showToast()
+                            } else {
+                                FailToast(context, "Delete product failed!").showToast()
+                                Log.e("My Shop", "Error remove")
+                            }
                         }
-                    }
+                }
+
+                binding.btnNo.setOnClickListener {
+                    alertDialog.dismiss()
+                }
             }
-            CustomAlertDialog.binding.btnNo.setOnClickListener {
-                CustomAlertDialog.alertDialog.dismiss()
-            }
-            CustomAlertDialog.showAlertDialog()
+
+            customAlertDialog.showAlertDialog()
+
         }
 
         holder.binding.imgEdit.setOnClickListener {

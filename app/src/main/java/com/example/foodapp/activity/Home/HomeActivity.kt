@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
+import com.etebarian.meowbottomnavigation.MeowBottomNavigation
 import com.example.foodapp.R
 import com.example.foodapp.activity.Cart_PlaceOrder.CartActivity
 import com.example.foodapp.activity.Cart_PlaceOrder.EmptyCartActivity
@@ -58,7 +59,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import meow.bottomnavigation.MeowBottomNavigation
+
 
 
 class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -87,7 +88,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     // Chuyển đổi dữ liệu từ snapshot sang một class hoặc Map
                     val user = snapshot.getValue(User::class.java) // Dùng class User
                     if (user != null) {
-                        if (user.admin == false){
+                        if (user.admin == false) {
                             val navMenu = binding.navigationLeft.menu
                             val item_user = navMenu.findItem(R.id.manager_user)
                             val item_pro = navMenu.findItem(R.id.manager_product)
@@ -99,6 +100,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     Log.e("Firebase", "User does not exist")
                 }
             }
+
             override fun onCancelled(error: DatabaseError) {
                 Log.e("Firebase", "Error: ${error.message}")
             }
@@ -111,8 +113,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     FirebaseAuth.getInstance().signOut()
                     FailToast(this@HomeActivity, "Account blocked!").showToast()
 
-                    startActivity(Intent(this@HomeActivity, LoginActivity::class.java)
-                        .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK))
+                    startActivity(
+                        Intent(this@HomeActivity, LoginActivity::class.java)
+                            .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    )
                     finish()
                 }
             }
@@ -131,6 +135,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         initUI()
         loadInformationForNavigationBar()
     }
+
     override fun onDestroy() {
         super.onDestroy()
         userReference.removeEventListener(userValueEventListener)
@@ -143,8 +148,13 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         createActionBar()
 
         layoutMain = binding.layoutMain
+        val homeFragment = HomeFragment()
+        val bundle = Bundle()
+        bundle.putString("userId", userId) // Đặt userId vào bundle
+        homeFragment.arguments = bundle // Truyền bundle vào fragment
+        // Thay thế fragment trong container
         supportFragmentManager.beginTransaction()
-            .replace(layoutMain.id, HomeFragment(userId))
+            .replace(layoutMain.id, homeFragment) // Đảm bảo rằng fragment_container là ID của container chứa fragment
             .commit()
 
         setEventNavigationBottom()
@@ -162,46 +172,66 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     startActivity(intent)
                     true
                 }
-                R.id.cart_menu -> {
-                    FirebaseDatabase.getInstance().reference.child("Carts").addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            var isCartFound = false
-                            for (ds in snapshot.children) {
-                                val cart = ds.getValue(Cart::class.java)
-                                //Log.d("CartDebug", "cartId: ${cart?.cartId}")
-                                //Log.d("CartDebug", "userId: $userId")
-                                if (!cart?.cartId.isNullOrEmpty()) {
-                                    FirebaseDatabase.getInstance().reference.child("CartInfo's").child(cart?.cartId!!)
-                                        .addListenerForSingleValueEvent(object : ValueEventListener {
-                                            override fun onDataChange(snapshot: DataSnapshot) {
-                                                //Log.d("CartDebug", "so san pham: ${snapshot.childrenCount}")
-                                                if (snapshot.exists() && snapshot.childrenCount == 0L) {
-                                                    startActivity(Intent(this@HomeActivity, EmptyCartActivity::class.java))
-                                                } else {
-                                                    val intent = Intent(this@HomeActivity, CartActivity::class.java).apply {
-                                                        putExtra("userId", userId)
-                                                    }
-                                                    startActivity(intent)
-                                                }
-                                            }
 
-                                            override fun onCancelled(error: DatabaseError) {
-                                                Log.e("CartError", "Lỗi khi tải CartInfos: ${error.message}")
-                                            }
-                                        })
-                                    isCartFound = true
-                                    break
+                R.id.cart_menu -> {
+                    FirebaseDatabase.getInstance().reference.child("Carts")
+                        .addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                var isCartFound = false
+                                for (ds in snapshot.children) {
+                                    val cart = ds.getValue(Cart::class.java)
+                                    //Log.d("CartDebug", "cartId: ${cart?.cartId}")
+                                    //Log.d("CartDebug", "userId: $userId")
+                                    if (!cart?.cartId.isNullOrEmpty()) {
+                                        FirebaseDatabase.getInstance().reference.child("CartInfo's")
+                                            .child(cart?.cartId!!)
+                                            .addListenerForSingleValueEvent(object :
+                                                ValueEventListener {
+                                                override fun onDataChange(snapshot: DataSnapshot) {
+                                                    //Log.d("CartDebug", "so san pham: ${snapshot.childrenCount}")
+                                                    if (snapshot.exists() && snapshot.childrenCount == 0L) {
+                                                        startActivity(
+                                                            Intent(
+                                                                this@HomeActivity,
+                                                                EmptyCartActivity::class.java
+                                                            )
+                                                        )
+                                                    } else {
+                                                        val intent = Intent(
+                                                            this@HomeActivity,
+                                                            CartActivity::class.java
+                                                        ).apply {
+                                                            putExtra("userId", userId)
+                                                        }
+                                                        startActivity(intent)
+                                                    }
+                                                }
+
+                                                override fun onCancelled(error: DatabaseError) {
+                                                    Log.e(
+                                                        "CartError",
+                                                        "Lỗi khi tải CartInfos: ${error.message}"
+                                                    )
+                                                }
+                                            })
+                                        isCartFound = true
+                                        break
+                                    }
+                                }
+                                if (!isCartFound) {
+                                    startActivity(
+                                        Intent(
+                                            this@HomeActivity,
+                                            EmptyCartActivity::class.java
+                                        )
+                                    )
                                 }
                             }
-                            if (!isCartFound) {
-                                startActivity(Intent(this@HomeActivity, EmptyCartActivity::class.java))
-                            }
-                        }
 
-                        override fun onCancelled(error: DatabaseError) {
-                            Log.e("CartError", "Lỗi khi tải Carts: ${error.message}")
-                        }
-                    })
+                            override fun onCancelled(error: DatabaseError) {
+                                Log.e("CartError", "Lỗi khi tải Carts: ${error.message}")
+                            }
+                        })
                     true
                 }
 
@@ -219,11 +249,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         binding.bottomNavigation.setOnClickMenuListener { model ->
             selectionFragment = when (model.id) {
                 1 -> FavoriteFragment(userId)
-                2 -> HomeFragment(userId)
+                2 -> HomeFragment()
                 3 -> NotificationFragment(userId)
                 else -> null
             }
             selectionFragment?.let {
+                val bundle = Bundle()
+                bundle.putString("userId", userId)
+                it.arguments = bundle
                 supportFragmentManager.beginTransaction().replace(layoutMain.id, it).commit()
             }
         }
@@ -231,11 +264,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         binding.bottomNavigation.setOnShowListener { model ->
             selectionFragment = when (model.id) {
                 1 -> FavoriteFragment(userId)
-                2 -> HomeFragment(userId)
+                2 -> HomeFragment()
                 3 -> NotificationFragment(userId)
                 else -> null
             }
             selectionFragment?.let {
+                val bundle = Bundle()
+                bundle.putString("userId", userId)
+                it.arguments = bundle
                 supportFragmentManager.beginTransaction().replace(layoutMain.id, it).commit()
             }
         }
@@ -263,7 +299,11 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun requestPermission(permission: String, requestCode: Int) {
-        if (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_DENIED) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                permission
+            ) == PackageManager.PERMISSION_DENIED
+        ) {
             ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
         }
     }
@@ -284,42 +324,51 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 intent.putExtra("userId", userId)
                 startActivity(intent)
             }
+
             R.id.orderMenu -> {
                 val intent = Intent(this, OrderActivity::class.java)
                 intent.putExtra("userId", userId)
                 startActivity(intent)
             }
+
             R.id.myShopMenu -> {
                 val intent = Intent(this, MyShopActivity::class.java)
                 intent.putExtra("userId", userId)
                 startActivity(intent)
             }
+
             R.id.manager_user -> {
                 val intent = Intent(this, ManagerUserActivity::class.java)
                 intent.putExtra("userId", userId)
                 startActivity(intent)
             }
+
             R.id.manager_product -> {
                 val intent = Intent(this, ManagerProductActivity::class.java)
                 intent.putExtra("userId", userId)
                 startActivity(intent)
             }
+
             R.id.logoutMenu -> {
-                CustomAlertDialog(this, "Do you want to logout?").apply {
-                    CustomAlertDialog.binding.btnYes.setOnClickListener {
+                val customAlertDialog = CustomAlertDialog(this, "Do you want to logout?").apply {
+                    binding.btnYes.setOnClickListener {
                         SuccessfulToast(this@HomeActivity, "Logout successfully!").showToast()
-                        CustomAlertDialog.alertDialog.dismiss()
+                        alertDialog.dismiss()
                         FirebaseAuth.getInstance().signOut()
-                        startActivity(Intent(this@HomeActivity, LoginActivity::class.java)
-                            .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK))
+                        startActivity(
+                            Intent(this@HomeActivity, LoginActivity::class.java)
+                                .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        )
                         finish()
                     }
-                    CustomAlertDialog.binding.btnNo.setOnClickListener {
-                        CustomAlertDialog.alertDialog.dismiss()
+                    binding.btnNo.setOnClickListener {
+                        alertDialog.dismiss()
                     }
                 }
-                CustomAlertDialog.showAlertDialog()
+
+                customAlertDialog.showAlertDialog()
             }
+
             else -> {
 
             }
@@ -327,6 +376,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         binding.drawLayoutHome.close()
         return true
     }
+
     override fun onBackPressed() {
         super.onBackPressed()
         moveTaskToBack(true)
@@ -335,56 +385,65 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     fun loadInformationForNavigationBar() {
 
-        FirebaseNotificationHelper(this).readNotification(userId, object : FirebaseNotificationHelper.DataStatus {
-            override fun DataIsLoaded(notificationList: List<Notification>, notificationListToNotify: List<Notification>) {
-                var count = 0
-                for (i in notificationList.indices) {
-                    if (!notificationList[i].isRead) {
-                        count++
+        FirebaseNotificationHelper(this).readNotification(
+            userId,
+            object : FirebaseNotificationHelper.DataStatus {
+                override fun DataIsLoaded(
+                    notificationList: List<Notification>,
+                    notificationListToNotify: List<Notification>
+                ) {
+                    var count = 0
+                    for (i in notificationList.indices) {
+                        if (!notificationList[i].isRead) {
+                            count++
+                        }
+                    }
+                    if (count > 0) {
+                        binding.bottomNavigation.setCount(3, count.toString())
+                    } else if (count == 0) {
+                        binding.bottomNavigation.clearCount(3)
+                    }
+
+                    for (notification in notificationListToNotify) {
+                        makeNotification(notification)
                     }
                 }
-                if (count > 0) {
-                    binding.bottomNavigation.setCount(3, count.toString())
-                } else if (count == 0) {
-                    binding.bottomNavigation.clearCount(3)
+
+                override fun DataIsInserted() {}
+
+                override fun DataIsUpdated() {}
+
+                override fun DataIsDeleted() {}
+            })
+
+        FirebaseUserInfoHelper(this).readUserInfo(
+            userId,
+            object : FirebaseUserInfoHelper.DataStatus {
+                override fun dataIsLoaded(user: User?) {
+                    val headerView = binding.navigationLeft.getHeaderView(0)
+                    val imgAvatarInNavigationBar: ShapeableImageView =
+                        headerView.findViewById(R.id.imgAvatarInNavigationBar)
+                    val txtNameInNavigationBar: TextView =
+                        headerView.findViewById(R.id.txtNameInNavigationBar)
+                    txtNameInNavigationBar.text = "Hi, ${getLastName(user?.userName ?: "")}"
+                    if (!this@HomeActivity.isDestroyed && !this@HomeActivity.isFinishing) {
+                        Glide.with(this@HomeActivity)
+                            .load(user?.avatarURL)
+                            .placeholder(R.drawable.default_avatar)
+                            .into(imgAvatarInNavigationBar)
+                    }
+
                 }
 
-                for (notification in notificationListToNotify) {
-                    makeNotification(notification)
-                }
-            }
-
-            override fun DataIsInserted() {}
-
-            override fun DataIsUpdated() {}
-
-            override fun DataIsDeleted() {}
-        })
-
-        FirebaseUserInfoHelper(this).readUserInfo(userId, object : FirebaseUserInfoHelper.DataStatus {
-            override fun dataIsLoaded(user: User?) {
-                val headerView = binding.navigationLeft.getHeaderView(0)
-                val imgAvatarInNavigationBar: ShapeableImageView = headerView.findViewById(R.id.imgAvatarInNavigationBar)
-                val txtNameInNavigationBar: TextView = headerView.findViewById(R.id.txtNameInNavigationBar)
-                txtNameInNavigationBar.text = "Hi, ${getLastName(user?.userName ?: "")}"
-                if (!this@HomeActivity.isDestroyed && !this@HomeActivity.isFinishing) {
-                    Glide.with(this@HomeActivity)
-                        .load(user?.avatarURL)
-                        .placeholder(R.drawable.default_avatar)
-                        .into(imgAvatarInNavigationBar)
+                override fun dataIsInserted() {
                 }
 
-            }
+                override fun dataIsUpdated() {
+                }
 
-            override fun dataIsInserted() {
-            }
-
-            override fun dataIsUpdated() {
-            }
-
-            override fun dataIsDeleted(){
-            }
-        })
+                override fun dataIsDeleted() {
+                }
+            })
     }
 
     private fun getLastName(userName: String): String {
@@ -400,7 +459,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         builder.setSmallIcon(R.drawable.bkg)
             .setContentTitle("Food services")
             .setContentText(notification.title)
-            .setStyle(NotificationCompat.BigTextStyle().setBigContentTitle(notification.title).bigText(notification.content))
+            .setStyle(
+                NotificationCompat.BigTextStyle().setBigContentTitle(notification.title)
+                    .bigText(notification.content)
+            )
             .setLargeIcon(largeIcon)
             .setColor(Color.RED)
             .setAutoCancel(true)
@@ -415,14 +477,20 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
 
-            val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE)
+            val pendingIntent =
+                PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE)
             builder.setContentIntent(pendingIntent)
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 var notificationChannel = notificationManager.getNotificationChannel(channelId)
                 if (notificationChannel == null) {
-                    notificationChannel = NotificationChannel(channelId, "Some description", NotificationManager.IMPORTANCE_HIGH).apply {
+                    notificationChannel = NotificationChannel(
+                        channelId,
+                        "Some description",
+                        NotificationManager.IMPORTANCE_HIGH
+                    ).apply {
                         lightColor = Color.GREEN
                         enableVibration(true)
                     }
@@ -433,14 +501,16 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             notificationManager.notify(0, builder.build())
         } else if (notification.productId != "None") {
             val userName = arrayOfNulls<String>(1)
-            FirebaseDatabase.getInstance().getReference().child("Users").child(userId).addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    userName[0] = snapshot.child("userName").getValue(String::class.java)
-                }
+            FirebaseDatabase.getInstance().getReference().child("Users").child(userId)
+                .addValueEventListener(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        userName[0] = snapshot.child("userName").getValue(String::class.java)
+                    }
 
-                override fun onCancelled(error: DatabaseError) {}
-            })
-            FirebaseProductInfoHelper(notification.productId!!).readInformationById(object : FirebaseProductInfoHelper.DataStatusInformationOfProduct {
+                    override fun onCancelled(error: DatabaseError) {}
+                })
+            FirebaseProductInfoHelper(notification.productId!!).readInformationById(object :
+                FirebaseProductInfoHelper.DataStatusInformationOfProduct {
                 override fun DataIsLoaded(product: Product?) {
                     val intent = Intent(applicationContext, ProductInfoActivity::class.java).apply {
                         putExtra("productId", product?.productId)
@@ -465,14 +535,25 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     }
                     startActivity(intent)
 
-                    val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE)
+                    val pendingIntent = PendingIntent.getActivity(
+                        applicationContext,
+                        0,
+                        intent,
+                        PendingIntent.FLAG_MUTABLE
+                    )
                     builder.setContentIntent(pendingIntent)
-                    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    val notificationManager =
+                        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        var notificationChannel = notificationManager.getNotificationChannel(channelId)
+                        var notificationChannel =
+                            notificationManager.getNotificationChannel(channelId)
                         if (notificationChannel == null) {
-                            notificationChannel = NotificationChannel(channelId, "Some description", NotificationManager.IMPORTANCE_HIGH).apply {
+                            notificationChannel = NotificationChannel(
+                                channelId,
+                                "Some description",
+                                NotificationManager.IMPORTANCE_HIGH
+                            ).apply {
                                 lightColor = Color.GREEN
                                 enableVibration(true)
                             }
@@ -497,14 +578,20 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
 
-            val pendingIntent = PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE)
+            val pendingIntent =
+                PendingIntent.getActivity(applicationContext, 0, intent, PendingIntent.FLAG_MUTABLE)
             builder.setContentIntent(pendingIntent)
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 var notificationChannel = notificationManager.getNotificationChannel(channelId)
                 if (notificationChannel == null) {
-                    notificationChannel = NotificationChannel(channelId, "Some description", NotificationManager.IMPORTANCE_HIGH).apply {
+                    notificationChannel = NotificationChannel(
+                        channelId,
+                        "Some description",
+                        NotificationManager.IMPORTANCE_HIGH
+                    ).apply {
                         lightColor = Color.GREEN
                         enableVibration(true)
                     }
@@ -521,12 +608,17 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
 
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            val notificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 var notificationChannel = notificationManager.getNotificationChannel(channelId)
                 if (notificationChannel == null) {
-                    notificationChannel = NotificationChannel(channelId, "Some description", NotificationManager.IMPORTANCE_HIGH).apply {
+                    notificationChannel = NotificationChannel(
+                        channelId,
+                        "Some description",
+                        NotificationManager.IMPORTANCE_HIGH
+                    ).apply {
                         lightColor = Color.GREEN
                         enableVibration(true)
                     }

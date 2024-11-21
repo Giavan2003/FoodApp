@@ -39,36 +39,34 @@ class OrderAdapter(
             if (type == OrderActivity.CURRENT_ORDER) {
                 btnSee.text = "Received"
                 btnSee.setOnClickListener {
-                    CustomAlertDialog.binding.btnYes.setOnClickListener {
-                        tmp.billId?.let { billId ->
-                            FirebaseStatusOrderHelper().setShippingToCompleted(
-                                billId,
-                                object : FirebaseStatusOrderHelper.DataStatus {
-                                    override fun dataIsLoaded(bills: List<Bill>, isExistingBill: Boolean) {
+                    val customAlertDialog = CustomAlertDialog(context, "Do you want to change the order state to completed?").apply {
+                        binding.btnYes.setOnClickListener {
+                            tmp.billId?.let { billId ->
+                                FirebaseStatusOrderHelper().setShippingToCompleted(
+                                    billId,
+                                    object : FirebaseStatusOrderHelper.DataStatus {
+                                        override fun dataIsLoaded(bills: List<Bill>, isExistingBill: Boolean) {}
 
+                                        override fun dataIsInserted() {}
+
+                                        override fun dataIsUpdated() {
+                                            SuccessfulToast(context, "Your order has been changed to completed state!").showToast()
+                                        }
+
+                                        override fun dataIsDeleted() {}
                                     }
-
-                                    override fun dataIsInserted() {
-
-                                    }
-
-                                    override fun dataIsUpdated() {
-                                        SuccessfulToast(context, "Your order has been changed to completed state!").showToast()
-
-                                    }
-
-                                    override fun dataIsDeleted() {
-
-                                    }
-                                }
-                            )
+                                )
+                            }
+                            alertDialog.dismiss()
                         }
-                        CustomAlertDialog.alertDialog.dismiss()
+
+                        binding.btnNo.setOnClickListener {
+                            alertDialog.dismiss()
+                        }
                     }
-                    CustomAlertDialog.binding.btnNo.setOnClickListener {
-                        CustomAlertDialog.alertDialog.dismiss()
-                    }
-                    CustomAlertDialog.showAlertDialog()
+
+                    customAlertDialog.showAlertDialog()
+
 
                 }
             } else {

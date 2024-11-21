@@ -21,11 +21,12 @@ import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 
 
-class HomeFragment(private val userId: String) : Fragment() {
+class HomeFragment : Fragment() {
 
     private lateinit var binding: FragmentHomeBinding
+    private lateinit var userId: String
     private val handler = Handler()
-    private lateinit var imagesList: List<Images>  // Biến này cần được khởi tạo
+    private lateinit var imagesList: List<Images>
     private lateinit var viewPager2Adapter: ViewPager2Adapter
 
     private val runnable = object : Runnable {
@@ -38,13 +39,14 @@ class HomeFragment(private val userId: String) : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         binding = FragmentHomeBinding.inflate(inflater, container, false)
+        userId = arguments?.getString("userId") ?: "" // Retrieve userId from arguments
         initUI()
         return binding.root
     }
 
     private fun initUI() {
         // Khởi tạo imagesList ở đây
-        imagesList = getListImages()  // Khởi tạo imagesList
+        imagesList = getListImages()
 
         binding.layoutSearchView.setOnClickListener {
             val intent = Intent(activity, FindActivity::class.java)
@@ -113,4 +115,3 @@ class HomeFragment(private val userId: String) : Fragment() {
         handler.postDelayed(runnable, 3000)
     }
 }
-

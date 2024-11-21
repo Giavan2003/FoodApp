@@ -78,6 +78,7 @@ class StatusOrderRecyclerViewAdapter(
                                                 )
                                             }
                                         }
+
                                     }
                                     override fun dataIsDeleted() {}
                                 })
@@ -105,6 +106,7 @@ class StatusOrderRecyclerViewAdapter(
                                     )
                                 }
                             }
+
                         }
                         override fun dataIsDeleted() {}
                     })

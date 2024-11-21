@@ -57,7 +57,7 @@ dependencies {
     implementation("com.google.firebase:firebase-database-ktx:21.0.0")
     implementation("com.firebaseui:firebase-ui-database:8.0.1")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7")
-    implementation(files("libs/meow-bottom-navigation-1.3.1.aar"))
+    implementation(files("libs/meow-bottom-navigation-java-1.2.0.aar"))
     implementation(files("libs/swipe-reveal-layout-1.4.1.aar"))
     implementation(files("libs/circleindicator-2.1.6.aar"))
     implementation(files("libs/chip-navigation-bar-1.4.0.aar"))

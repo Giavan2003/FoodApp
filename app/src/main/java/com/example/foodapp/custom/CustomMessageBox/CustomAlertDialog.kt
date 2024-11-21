@@ -9,34 +9,21 @@ import com.example.foodapp.databinding.LayoutAlertDialogBinding
 
 
 class CustomAlertDialog(mContext: Context, content: String) {
-
-    companion object {
-        lateinit var alertDialog: AlertDialog
-        lateinit var binding: LayoutAlertDialogBinding
-
-        fun showAlertDialog() {
-            alertDialog.show()
-        }
-        fun dismiss() {
-            if (::alertDialog.isInitialized) {
-                alertDialog.dismiss()
-            } else {
-
-            }
-        }
-    }
+     var alertDialog: android.app.AlertDialog
+     val binding: LayoutAlertDialogBinding
 
     init {
-
         val builder = AlertDialog.Builder(mContext, R.style.AlertDialogTheme)
-
-
         binding = LayoutAlertDialogBinding.inflate(LayoutInflater.from(mContext))
         builder.setView(binding.root)
 
         binding.txtContentMessage.text = content
-
         alertDialog = builder.create()
         alertDialog.window?.setBackgroundDrawable(ColorDrawable(0))
     }
+
+    fun showAlertDialog() {
+        alertDialog.show()
+    }
 }
+

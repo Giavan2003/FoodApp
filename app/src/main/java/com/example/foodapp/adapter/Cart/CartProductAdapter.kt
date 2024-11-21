@@ -252,76 +252,79 @@ class CartProductAdapter(
         holder.binding.delete.setOnClickListener {
             CustomAlertDialog(mContext, "Delete this product?")
 
-            CustomAlertDialog.binding.btnYes.setOnClickListener {
-                CustomAlertDialog.alertDialog.dismiss()
+            val customAlertDialog = CustomAlertDialog(mContext, "Delete this product?").apply {
+                binding.btnYes.setOnClickListener {
+                    alertDialog.dismiss()
 
-                FirebaseDatabase.getInstance().getReference()
-                    .child("CartInfo's")
-                    .child(cartId)
-                    .child(cartInfo.cartInfoId!!)
-                    .removeValue()
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            SuccessfulToast(mContext, "Delete product successfully!").showToast()
-                            adapterItemListener?.onDeleteProduct()
-                        }
-                    }
-
-                FirebaseDatabase.getInstance().getReference()
-                    .child("Carts")
-                    .child(cartId)
-                    .addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            val cart = snapshot.getValue(Cart::class.java)
-                            FirebaseDatabase.getInstance().getReference()
-                                .child("Products")
-                                .child(cartInfo.productId!!)
-                                .addListenerForSingleValueEvent(object : ValueEventListener {
-                                    override fun onDataChange(snapshot1: DataSnapshot) {
-                                        val product = snapshot1.getValue(Product::class.java)
-                                        val totalAmount = cart?.totalAmount?.minus(cartInfo.amount) ?: 0
-                                        val totalPrice = cart?.totalPrice?.minus((product?.productPrice ?: 0) * cartInfo.amount) ?: 0L
-
-                                        val map = hashMapOf<String, Any>(
-                                            "totalAmount" to totalAmount,
-                                            "totalPrice" to totalPrice
-                                        )
-                                        FirebaseDatabase.getInstance().getReference()
-                                            .child("Carts")
-                                            .child(cartId)
-                                            .updateChildren(map)
-                                    }
-
-                                    override fun onCancelled(error: DatabaseError) {}
-                                })
+                    FirebaseDatabase.getInstance().getReference()
+                        .child("CartInfo's")
+                        .child(cartId)
+                        .child(cartInfo.cartInfoId!!)
+                        .removeValue()
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                SuccessfulToast(mContext, "Delete product successfully!").showToast()
+                                adapterItemListener?.onDeleteProduct()
+                            }
                         }
 
-                        override fun onCancelled(error: DatabaseError) {}
-                    })
+                    FirebaseDatabase.getInstance().getReference()
+                        .child("Carts")
+                        .child(cartId)
+                        .addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                val cart = snapshot.getValue(Cart::class.java)
+                                FirebaseDatabase.getInstance().getReference()
+                                    .child("Products")
+                                    .child(cartInfo.productId!!)
+                                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                                        override fun onDataChange(snapshot1: DataSnapshot) {
+                                            val product = snapshot1.getValue(Product::class.java)
+                                            val totalAmount = cart?.totalAmount?.minus(cartInfo.amount) ?: 0
+                                            val totalPrice = cart?.totalPrice?.minus((product?.productPrice ?: 0) * cartInfo.amount) ?: 0L
 
-                FirebaseDatabase.getInstance().getReference()
-                    .child("Products")
-                    .child(cartInfo.productId!!)
-                    .child("remainAmount")
-                    .addListenerForSingleValueEvent(object : ValueEventListener {
-                        override fun onDataChange(snapshot: DataSnapshot) {
-                            val remainAmount = (snapshot.getValue(Int::class.java) ?: 0) + cartInfo.amount
-                            FirebaseDatabase.getInstance().getReference()
-                                .child("Products")
-                                .child(cartInfo.productId!!)
-                                .child("remainAmount")
-                                .setValue(remainAmount)
-                        }
+                                            val map = hashMapOf<String, Any>(
+                                                "totalAmount" to totalAmount,
+                                                "totalPrice" to totalPrice
+                                            )
+                                            FirebaseDatabase.getInstance().getReference()
+                                                .child("Carts")
+                                                .child(cartId)
+                                                .updateChildren(map)
+                                        }
 
-                        override fun onCancelled(error: DatabaseError) {}
-                    })
+                                        override fun onCancelled(error: DatabaseError) {}
+                                    })
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {}
+                        })
+
+                    FirebaseDatabase.getInstance().getReference()
+                        .child("Products")
+                        .child(cartInfo.productId!!)
+                        .child("remainAmount")
+                        .addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                val remainAmount = (snapshot.getValue(Int::class.java) ?: 0) + cartInfo.amount
+                                FirebaseDatabase.getInstance().getReference()
+                                    .child("Products")
+                                    .child(cartInfo.productId!!)
+                                    .child("remainAmount")
+                                    .setValue(remainAmount)
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {}
+                        })
+                }
+
+                binding.btnNo.setOnClickListener {
+                    alertDialog.dismiss()
+                }
             }
 
-            CustomAlertDialog.binding.btnNo.setOnClickListener {
-                CustomAlertDialog.alertDialog.dismiss()
-            }
+            customAlertDialog.showAlertDialog()
 
-            CustomAlertDialog.showAlertDialog()
         }
 
         holder.binding.itemContainer.setOnClickListener {

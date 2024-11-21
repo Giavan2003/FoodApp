@@ -88,32 +88,34 @@ class AddressAdapter(
             }
 
             root.setOnLongClickListener {
-                CustomAlertDialog(context, "Delete this address?")
-                CustomAlertDialog.binding.btnYes.setOnClickListener {
-                    if (address.state == "default") {
-                        FailToast(context, "You cannot delete the default address!").showToast()
-                        CustomAlertDialog.alertDialog.dismiss()
-                    } else {
-                        address.addressId?.let { addressId ->
-                            FirebaseDatabase.getInstance()
-                                .getReference("Address")
-                                .child(FirebaseAuth.getInstance().currentUser?.uid ?: "")
-                                .child(addressId)
-                                .removeValue()
-                                .addOnCompleteListener { task ->
-                                    if (task.isSuccessful) {
-                                        SuccessfulToast(context, "Delete address successfully!").showToast()
-                                        CustomAlertDialog.alertDialog.dismiss()
-                                        addressAdapterListener?.onDeleteAddress()
+                val customAlertDialog = CustomAlertDialog(context, "Delete this address?").apply {
+                    binding.btnYes.setOnClickListener {
+                        if (address.state == "default") {
+                            FailToast(context, "You cannot delete the default address!").showToast()
+                            alertDialog.dismiss()
+                        } else {
+                            address.addressId?.let { addressId ->
+                                FirebaseDatabase.getInstance()
+                                    .getReference("Address")
+                                    .child(FirebaseAuth.getInstance().currentUser?.uid ?: "")
+                                    .child(addressId)
+                                    .removeValue()
+                                    .addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            SuccessfulToast(context, "Delete address successfully!").showToast()
+                                            alertDialog.dismiss()
+                                            addressAdapterListener?.onDeleteAddress()
+                                        }
                                     }
-                                }
+                            }
                         }
                     }
+                    binding.btnNo.setOnClickListener {
+                        alertDialog.dismiss()
+                    }
                 }
-                CustomAlertDialog.binding.btnNo.setOnClickListener {
-                    CustomAlertDialog.alertDialog.dismiss()
-                }
-                CustomAlertDialog.showAlertDialog()
+
+                customAlertDialog.showAlertDialog()
                 true
             }
         }

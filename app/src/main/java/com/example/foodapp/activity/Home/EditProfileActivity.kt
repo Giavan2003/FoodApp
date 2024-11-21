@@ -276,17 +276,17 @@ class EditProfileActivity : AppCompatActivity() {
             if (binding.update.isEnabled) {
                 val customAlertDialog = CustomAlertDialog(this, "Save changes?")
 
-                CustomAlertDialog.binding.btnYes.setOnClickListener {
-                    CustomAlertDialog.alertDialog.dismiss()
+                customAlertDialog.binding.btnYes.setOnClickListener {
+                    customAlertDialog.alertDialog.dismiss()
                     updateInfo()
                 }
 
-                CustomAlertDialog.binding.btnNo.setOnClickListener {
-                    CustomAlertDialog.alertDialog.dismiss()
+                customAlertDialog.binding.btnNo.setOnClickListener {
+                    customAlertDialog.alertDialog.dismiss()
                     finish()
                 }
 
-                CustomAlertDialog.showAlertDialog()
+                customAlertDialog.showAlertDialog()
             } else {
                 finish()
             }
