@@ -224,7 +224,7 @@ class EditProfileActivity : AppCompatActivity() {
         fileRef.putFile(imageUri).addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 fileRef.downloadUrl.addOnSuccessListener { uri ->
-                    deleteOldImage()
+                    //deleteOldImage()
 
                     imageUrl = uri.toString()
                     Glide.with(this)

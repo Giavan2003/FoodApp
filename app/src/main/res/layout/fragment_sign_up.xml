@@ -130,6 +130,7 @@
                         android:maxLines="1"
                         android:lines="1"
                         android:ems="10"
+                        android:inputType="textPassword"
                         android:id="@+id/edtPass"/>
                 </com.google.android.material.textfield.TextInputLayout>
 
