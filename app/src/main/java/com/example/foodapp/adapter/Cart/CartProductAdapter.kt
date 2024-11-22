@@ -149,19 +149,6 @@ class CartProductAdapter(
 
                                     override fun onCancelled(error: DatabaseError) {}
                                 })
-
-                            FirebaseDatabase.getInstance().reference.child("Products")
-                                .child(cartInfo.productId!!).child("remainAmount")
-                                .addListenerForSingleValueEvent(object : ValueEventListener {
-                                    override fun onDataChange(snapshot: DataSnapshot) {
-                                        val updatedRemainAmount = (snapshot.getValue(Int::class.java) ?: 0) - 1
-                                        FirebaseDatabase.getInstance().reference.child("Products")
-                                            .child(cartInfo.productId!!).child("remainAmount")
-                                            .setValue(updatedRemainAmount)
-                                    }
-
-                                    override fun onCancelled(error: DatabaseError) {}
-                                })
                         }
                     }
 

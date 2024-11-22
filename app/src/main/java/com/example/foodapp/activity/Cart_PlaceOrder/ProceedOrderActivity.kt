@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -75,18 +76,24 @@ class ProceedOrderActivity : AppCompatActivity() {
                                     if (product?.productId == productId) {
                                         val publisherId = product.publisherId ?: return
                                         if (filterCartInfoMap.containsKey(publisherId)) {
-                                            cartInfoMap[productId]?.let { filterCartInfoMap[publisherId]?.add(it)
+                                            cartInfoMap[productId]?.let {
+                                                filterCartInfoMap[publisherId]?.add(it)
                                             }
-                                            val totalPrice = filterCartInfoPriceMap[publisherId] ?: 0L
+                                            val totalPrice =
+                                                filterCartInfoPriceMap[publisherId] ?: 0L
                                             val productAmount = cartInfoMap[productId]?.amount ?: 0
-                                            filterCartInfoPriceMap[publisherId] = totalPrice + product.productPrice * productAmount.toLong()
+                                            filterCartInfoPriceMap[publisherId] =
+                                                totalPrice + product.productPrice * productAmount.toLong()
 
                                         } else {
-                                            cartInfoMap[productId]?.let { filterCartInfoMap[publisherId] = mutableListOf(it)
+                                            cartInfoMap[productId]?.let {
+                                                filterCartInfoMap[publisherId] = mutableListOf(it)
                                             }
                                             val productAmount = cartInfoMap[productId]?.amount ?: 0
-                                            filterCartInfoPriceMap[publisherId] = product.productPrice * productAmount.toLong()
-                                            filterCartInfoImageUrlMap[publisherId] = product.productImage1 ?: ""
+                                            filterCartInfoPriceMap[publisherId] =
+                                                product.productPrice * productAmount.toLong()
+                                            filterCartInfoImageUrlMap[publisherId] =
+                                                product.productImage1 ?: ""
                                         }
 
 
@@ -100,15 +107,23 @@ class ProceedOrderActivity : AppCompatActivity() {
                                 val formatter = SimpleDateFormat("dd/MM/yyyy")
                                 val date = Date()
                                 val bill = Bill(
-                                    GlobalConfig.choseAddressId, billId, formatter.format(date), "Confirm",
-                                    false, userId, senderId, filterCartInfoPriceMap[senderId]!!,
+                                    GlobalConfig.choseAddressId,
+                                    billId,
+                                    formatter.format(date),
+                                    "Confirm",
+                                    false,
+                                    userId,
+                                    senderId,
+                                    filterCartInfoPriceMap[senderId]!!,
                                     filterCartInfoImageUrlMap[senderId]!!
                                 )
-                                FirebaseDatabase.getInstance().reference.child("Bills").child(billId!!)
+                                FirebaseDatabase.getInstance().reference.child("Bills")
+                                    .child(billId!!)
                                     .setValue(bill).addOnCompleteListener { task ->
                                         if (task.isSuccessful) {
                                             filterCartInfoMap[senderId]?.forEach { cartInfo ->
-                                                val billInfoId = FirebaseDatabase.getInstance().reference.push().key
+                                                val billInfoId =
+                                                    FirebaseDatabase.getInstance().reference.push().key
                                                 val map1 = hashMapOf<String, Any>(
                                                     "amount" to cartInfo.amount,
                                                     "billInfoId" to billInfoId!!,
@@ -116,15 +131,49 @@ class ProceedOrderActivity : AppCompatActivity() {
                                                 )
                                                 FirebaseDatabase.getInstance().reference.child("BillInfos")
                                                     .child(billId).child(billInfoId).setValue(map1)
+                                                // tru so luong sp
+                                                FirebaseDatabase.getInstance().reference.child("Products")
+                                                    .child(cartInfo.productId!!)
+                                                    .addListenerForSingleValueEvent(object :
+                                                        ValueEventListener {
+                                                        override fun onDataChange(productSnapshot: DataSnapshot) {
+                                                            val product =
+                                                                productSnapshot.getValue(Product::class.java)
+                                                            product?.let {
+                                                                val updatedAmount =
+                                                                    (it.remainAmount
+                                                                        ?: 0) - cartInfo.amount
+                                                                if (updatedAmount >= 0) {
+                                                                    FirebaseDatabase.getInstance()
+                                                                        .reference.child("Products")
+                                                                        .child(cartInfo.productId!!)
+                                                                        .child("remainAmount")
+                                                                        .setValue(updatedAmount)
+                                                                } else {
+                                                                    Log.e(
+                                                                        "Error",
+                                                                        "Not enough stock for ${cartInfo.productId}"
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+
+                                                        override fun onCancelled(error: DatabaseError) {}
+                                                    })
 
                                                 FirebaseDatabase.getInstance().reference.child("Carts")
-                                                    .addListenerForSingleValueEvent(object : ValueEventListener {
+                                                    .addListenerForSingleValueEvent(object :
+                                                        ValueEventListener {
                                                         override fun onDataChange(snapshot: DataSnapshot) {
                                                             snapshot.children.forEach { ds ->
-                                                                val cart = ds.getValue(Cart::class.java)
+                                                                val cart =
+                                                                    ds.getValue(Cart::class.java)
                                                                 if (cart?.userId == userId) {
-                                                                    FirebaseDatabase.getInstance().reference.child("CartInfo's")
-                                                                        .child(cart.cartId!!).child(cartInfo.cartInfoId!!)
+                                                                    FirebaseDatabase.getInstance().reference.child(
+                                                                        "CartInfo's"
+                                                                    )
+                                                                        .child(cart.cartId!!)
+                                                                        .child(cartInfo.cartInfoId!!)
                                                                         .removeValue()
                                                                 }
                                                             }
@@ -155,7 +204,8 @@ class ProceedOrderActivity : AppCompatActivity() {
                                             cartInfoList.forEach { cartInfo ->
                                                 if (cartInfo.productId == product?.productId) {
                                                     totalAmount += cartInfo.amount
-                                                    totalPrice += (cartInfo.amount * (product?.productPrice?.toLong() ?: 0L))
+                                                    totalPrice += (cartInfo.amount * (product?.productPrice?.toLong()
+                                                        ?: 0L))
 
                                                 }
                                             }
@@ -172,10 +222,16 @@ class ProceedOrderActivity : AppCompatActivity() {
                                                     .setValue(cart.totalPrice - totalPrice)
                                             }
                                         }
-                                        SuccessfulToast(this@ProceedOrderActivity, "Order created successfully!").showToast()
+                                        SuccessfulToast(
+                                            this@ProceedOrderActivity,
+                                            "Order created successfully!"
+                                        ).showToast()
 
                                         cartInfoList.clear()
-                                        val intent = Intent(this@ProceedOrderActivity, HomeActivity::class.java)
+                                        val intent = Intent(
+                                            this@ProceedOrderActivity,
+                                            HomeActivity::class.java
+                                        )
                                         setResult(RESULT_OK, intent)
                                         finish()
                                     }
@@ -205,17 +261,19 @@ class ProceedOrderActivity : AppCompatActivity() {
     }
 
     private fun initChangeAddressActivity() {
-        changeAddressLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                loadAddressData()
+        changeAddressLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    loadAddressData()
+                }
             }
-        }
     }
 
     private fun loadAddressData() {
         if (GlobalConfig.choseAddressId != null) {
             FirebaseDatabase.getInstance().reference.child("Address")
-                .child(userId).child(GlobalConfig.choseAddressId!!).addListenerForSingleValueEvent(object : ValueEventListener {
+                .child(userId).child(GlobalConfig.choseAddressId!!)
+                .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         val address = snapshot.getValue(Address::class.java)
                         binding.receiverName.text = address?.receiverName
@@ -265,14 +323,24 @@ class ProceedOrderActivity : AppCompatActivity() {
     private fun pushNotificationCartCompleteForSeller(bill: Bill) {
         val title2 = "New order"
         val content2 = "Hurry up! There is a new order. Go to Delivery Manage for customer serving!"
-        val notification2 = FirebaseNotificationHelper.createNotification(title2,
-            content2, bill.imageUrl ?: "", "None", "None", bill.billId ?: "", null)
-        FirebaseNotificationHelper(this).addNotification(bill.senderId!!, notification2, object : FirebaseNotificationHelper.DataStatus {
-            override fun DataIsLoaded(notificationList: List<Notification>, notificationListToNotify: List<Notification>) {}
-            override fun DataIsInserted() {}
-            override fun DataIsUpdated() {}
-            override fun DataIsDeleted() {}
-        })
+        val notification2 = FirebaseNotificationHelper.createNotification(
+            title2,
+            content2, bill.imageUrl ?: "", "None", "None", bill.billId ?: "", null
+        )
+        FirebaseNotificationHelper(this).addNotification(
+            bill.senderId!!,
+            notification2,
+            object : FirebaseNotificationHelper.DataStatus {
+                override fun DataIsLoaded(
+                    notificationList: List<Notification>,
+                    notificationListToNotify: List<Notification>
+                ) {
+                }
+
+                override fun DataIsInserted() {}
+                override fun DataIsUpdated() {}
+                override fun DataIsDeleted() {}
+            })
     }
 }
 
