@@ -66,8 +66,6 @@ class DrinkHomeFrg(private val userId: String) : Fragment() {
     private fun initData() {
         Log.d("Data", "done")
         dsCurrentDrink = mutableListOf()
-
-
         FirebaseDatabase.getInstance().getReference("Products")
             .orderByChild("productType")
             .equalTo("Drink")
@@ -77,9 +75,8 @@ class DrinkHomeFrg(private val userId: String) : Fragment() {
                     for (item in snapshot.children) {
                         val product = item.getValue(Product::class.java)
                         if (product != null) {
-
-                            if (product.productType == "Drink") {
-                                totalDrink = totalDrink + product
+                            if (product.isChecked && product.remainAmount > 0) {
+                                totalDrink +=  product
                             }
                         }
                     }

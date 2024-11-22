@@ -75,7 +75,9 @@ class FoodHomeFrg(private val userId: String = "") : Fragment() {
                     for (item in snapshot.children) {
                         val product = item.getValue(Product::class.java)
                         if (product != null) {
-                            totalFood = totalFood + product
+                            if (product.isChecked && product.remainAmount > 0) {
+                                totalFood += product
+                            }
                         }
                     }
 
