@@ -44,7 +44,7 @@ class SignUpFragment : Fragment() {
                         if (task.isSuccessful) {
                             val userId = task.result?.user?.uid
                             if (userId != null) {
-                                val tmp = User(userId,fulname,email,pass,"https://cdn-icons-png.flaticon.com/512/13385/13385864.png","01/01/2000",username,phone,true)
+                                val tmp = User(userId,fulname,email,pass,"https://www.flaticon.com/free-icon/user_1144760?term=profile&page=1&position=4&origin=search&related_id=1144760","01/01/2000",username,phone,true)
                                 val cartId =
                                     FirebaseDatabase.getInstance().reference.push().key ?: ""
                                 val cart = Cart(cartId, 0, 0, userId)
