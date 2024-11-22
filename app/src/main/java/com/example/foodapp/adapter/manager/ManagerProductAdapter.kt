@@ -34,26 +34,25 @@ class ManagerProductAdapter(
                 .load(item.productImage1)
                 .into(imgFood)
             sw.isChecked = item.isChecked
-
             parentOfItemInHome.setOnClickListener {
-                // Xử lý sự kiện click vào item
-            }
 
+            }
+            sw.setOnCheckedChangeListener(null) // Gỡ bỏ listener trước khi cập nhật
+            if (sw.isChecked != item.isChecked) {
+                sw.isChecked = item.isChecked
+            } // Gán trạng thái từ dữ liệu
             sw.setOnCheckedChangeListener { _, isChecked ->
+                // Xử lý sự kiện khi người dùng thay đổi trạng thái
                 val database = FirebaseDatabase.getInstance()
                 val productRef = item.productId?.let { database.getReference("Products").child(it) }
-
                 productRef?.child("checked")?.setValue(isChecked)?.addOnSuccessListener {
                     Log.d("State", "success")
-                    val message = if (isChecked) {
-                        "Đã kích hoạt sản phẩm này"
-                    } else {
-                        "Đã tắt sản phẩm này"
-                    }
+                    val message = if (isChecked) "Đã kích hoạt sản phẩm này" else "Đã tắt sản phẩm này"
                     Toast.makeText(root.context, message, Toast.LENGTH_LONG).show()
                 }?.addOnFailureListener { exception ->
                     Log.e("State", "fail: ${exception.message}")
                 }
+                item.isChecked = isChecked // Cập nhật trạng thái trong danh sách
             }
         }
     }

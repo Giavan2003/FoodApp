@@ -43,12 +43,11 @@ class ManagerProductActivity : AppCompatActivity() {
     }
     private fun initData() {
         val intent = intent
+        ds.clear()
         userId = intent.getStringExtra("userId").toString()
         FirebaseDatabase.getInstance().getReference("Products")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    ds.clear()
-                    var i = 0
                     for (item in snapshot.children) {
                         val tmp = item.getValue(Product::class.java)
                         if (tmp != null) {

@@ -155,7 +155,7 @@ class ResultSearchActivity : AppCompatActivity() {
                         val product = productSnapshot.getValue(Product::class.java)
                         product?.let { dsAll.add(it) }
                     }
-                    Log.d("size",dsAll.size.toString())
+
                     position = 0
                     repeat(itemCount.coerceAtMost(dsAll.size - position)) {
                         dsCurrent.add(dsAll[position++])
