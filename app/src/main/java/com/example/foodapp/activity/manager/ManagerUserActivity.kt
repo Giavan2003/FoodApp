@@ -24,7 +24,7 @@ class ManagerUserActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityManagerUserBinding.inflate(layoutInflater)
-        setContentView(binding.getRoot())
+        setContentView(binding.root)
         initData()
         initUI()
     }

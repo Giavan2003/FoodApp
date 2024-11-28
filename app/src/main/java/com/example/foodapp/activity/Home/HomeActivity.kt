@@ -32,10 +32,10 @@ import com.example.foodapp.activity.MyShop.MyShopActivity
 import com.example.foodapp.activity.ProductInformation.ProductInfoActivity
 import com.example.foodapp.activity.manager.ManagerProductActivity
 import com.example.foodapp.activity.manager.ManagerUserActivity
+import com.example.foodapp.activity.MyShop.StatisticalActivity
 import com.example.foodapp.activity.order.OrderActivity
 import com.example.foodapp.activity.order.OrderDetailActivity
 import com.example.foodapp.activity.orderSellerManagement.DeliveryManagementActivity
-import com.example.foodapp.adapter.manager.ManagerUserAdapter
 import com.example.foodapp.custom.CustomMessageBox.CustomAlertDialog
 import com.example.foodapp.custom.CustomMessageBox.FailToast
 import com.example.foodapp.custom.CustomMessageBox.SuccessfulToast
@@ -348,7 +348,11 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 intent.putExtra("userId", userId)
                 startActivity(intent)
             }
-
+            R.id.statistical-> {
+                val intent = Intent(this, StatisticalActivity::class.java)
+                intent.putExtra("userId", userId)
+                startActivity(intent)
+            }
             R.id.logoutMenu -> {
                 val customAlertDialog = CustomAlertDialog(this, "Do you want to logout?").apply {
                     binding.btnYes.setOnClickListener {

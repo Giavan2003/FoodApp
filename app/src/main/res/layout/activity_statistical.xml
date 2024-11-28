@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".activity.MyShop.StatisticalActivity"
+    >
+
+    <!-- Nút quay lại -->
+
+    <!-- Tổng doanh thu -->
+    <ImageView
+        android:id="@+id/btnBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="Back"
+        android:padding="10dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/baseline_arrow_back_24" />
+
+    <TextView
+        android:id="@+id/totalRevenue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_marginBottom="24dp"
+        android:gravity="center"
+        android:text="Total Revenue: $0"
+        android:textSize="18sp" />
+
+    <!-- Biểu đồ doanh thu theo thời gian -->
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lineChart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="10dp"
+        android:layout_weight="1" />
+
+    <!-- Biểu đồ phân bổ doanh thu theo sản phẩm -->
+    <com.github.mikephil.charting.charts.PieChart
+        android:id="@+id/pieChart"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="10dp"
+        android:layout_weight="1" />
+
+    <TableLayout
+        android:id="@+id/tableLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="16dp"
+        android:stretchColumns="1"> <!-- Stretch column 1 (productName) -->
+
+        <!-- Table header row -->
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/imageTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Image"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/productNameTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:text="Tên sản phẩm"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/soldTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Đã bán"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/revenueTextView"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Doanh thu"
+                android:textStyle="bold" />
+        </TableRow>
+    </TableLayout>
+
+</LinearLayout>

@@ -17,4 +17,9 @@
         <item name="colorControlNormal">#D3D3D3</item>
         <item name="colorControlActivated">#FFC922</item>
     </style>
+  <!-- Base application theme. -->
+    <style name="Base.Theme.FoodOrderingApp" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your dark theme here. -->
+        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
+    </style>
 </resources>

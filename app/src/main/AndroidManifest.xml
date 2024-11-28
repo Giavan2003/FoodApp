@@ -23,6 +23,11 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".activity.MyShop.StatisticalActivity"
+            android:exported="false"
+            android:label="@string/title_activity_statistical"
+            android:theme="@style/Theme.FoodOrderingApp" />
+        <activity
             android:name=".activity.manager.ManagerProductActivity"
             android:exported="false" />
         <activity
@@ -55,7 +60,6 @@
             android:name=".activity.order.OrderActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
-
         <activity
             android:name=".activity.order.OrderDetailActivity"
             android:exported="false"
