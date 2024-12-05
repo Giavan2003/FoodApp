@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp">
+
+    <!-- Cột hình ảnh sản phẩm -->
+    <ImageView
+        android:id="@+id/productImage"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_marginEnd="8dp"
+        android:scaleType="centerCrop" />
+
+    <!-- Cột tên sản phẩm -->
+    <TextView
+        android:id="@+id/productName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:text="Product Name"
+        android:gravity="center" />
+
+    <!-- Cột số lượng bán -->
+    <TextView
+        android:id="@+id/productSold"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="0"
+        android:gravity="center" />
+
+    <!-- Cột doanh thu -->
+    <TextView
+        android:id="@+id/productRevenue"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="$0"
+        android:gravity="center" />
+</TableRow>

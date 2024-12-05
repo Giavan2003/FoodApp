@@ -30,6 +30,11 @@
         android:title="Manager product"
         app:cnb_iconColor="@color/main" />
     <item
+        android:id="@+id/statistical"
+        android:icon="@drawable/bar_chart"
+        android:title="Thống kê"
+        app:cnb_iconColor="@color/main" />
+    <item
         android:id="@+id/logoutMenu"
         android:title="Log Out"
         android:icon="@drawable/logout_icon"
