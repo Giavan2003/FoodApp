@@ -32,10 +32,11 @@ class ManagerUserAdapter (
             Glide.with(root)
                 .load(item.avatarURL)
                 .into(avt)
+
+            // Tạm thời loại bỏ lắng nghe sự kiện
+            sw.setOnCheckedChangeListener(null)
+
             sw.isChecked = item.isActive
-            parentOfItemInHome.setOnClickListener {
-                // Xử lý sự kiện click vào item
-            }
 
             sw.setOnCheckedChangeListener { _, isChecked ->
                 val database = FirebaseDatabase.getInstance()
@@ -49,6 +50,13 @@ class ManagerUserAdapter (
                         "Đã khóa tài khoản này này"
                     }
                     Toast.makeText(root.context, message, Toast.LENGTH_LONG).show()
+
+                    // Cập nhật trạng thái trong danh sách ds
+                    item.isActive = isChecked
+
+                    // Cập nhật lại item trong RecyclerView
+                    notifyItemChanged(position)
+
                 }?.addOnFailureListener { exception ->
                     Log.e("State", "fail: ${exception.message}")
                 }

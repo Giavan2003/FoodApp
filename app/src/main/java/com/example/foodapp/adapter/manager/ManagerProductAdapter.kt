@@ -33,14 +33,11 @@ class ManagerProductAdapter(
             Glide.with(root)
                 .load(item.productImage1)
                 .into(imgFood)
-            sw.isChecked = item.isChecked
-            parentOfItemInHome.setOnClickListener {
 
-            }
             sw.setOnCheckedChangeListener(null) // Gỡ bỏ listener trước khi cập nhật
-            if (sw.isChecked != item.isChecked) {
-                sw.isChecked = item.isChecked
-            } // Gán trạng thái từ dữ liệu
+
+            sw.isChecked = item.isChecked
+            
             sw.setOnCheckedChangeListener { _, isChecked ->
                 // Xử lý sự kiện khi người dùng thay đổi trạng thái
                 val database = FirebaseDatabase.getInstance()
@@ -49,10 +46,16 @@ class ManagerProductAdapter(
                     Log.d("State", "success")
                     val message = if (isChecked) "Đã kích hoạt sản phẩm này" else "Đã tắt sản phẩm này"
                     Toast.makeText(root.context, message, Toast.LENGTH_LONG).show()
+
+                    item.isChecked = isChecked // Cập nhật trạng thái trong danh sách
+
+                    // Cập nhật lại item trong RecyclerView
+                    notifyItemChanged(position)
+
                 }?.addOnFailureListener { exception ->
                     Log.e("State", "fail: ${exception.message}")
                 }
-                item.isChecked = isChecked // Cập nhật trạng thái trong danh sách
+
             }
         }
     }
